@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.sparse import csr_matrix
@@ -5,11 +6,9 @@ from scipy.sparse.csgraph import shortest_path
 
 """
 This code computes the problem of Rumo having to pass a field with n cows.
-We have to get from point A to point B with having as little contact to the cows as he start barking otherwise.
+We have to get from point A to point B with having as little contact with the cows as he start barking otherwise.
 I.e. we are searching for the path of least resistance.
 """
-
-np.random.seed(42)
 
 
 def cost_function(cow_coord: np.ndarray, rumo_coord: np.ndarray):
@@ -133,9 +132,20 @@ def main():
     """
     
     # Step 1: Let's build the problem field
-    x_length = 75        # x coordinate of the cows field [m]
-    y_length = 75        # y coordinate of the cows field [m]
-    n_obst = 10           # number of obsticles (cows)
+    if len(sys.argv) >= 4:
+        x_length = int(sys.argv[1])
+        y_length = int(sys.argv[2])
+        n_obst = int(sys.argv[3])
+        
+        if len(sys.argv) == 5:
+            np.random.seed(int(sys.argv[4]))
+        else:
+            raise Exception("Wrong number of arguments")
+        
+    else:
+        x_length = 50        # x coordinate of the cows field [m]
+        y_length = 50        # y coordinate of the cows field [m]
+        n_obst = 10           # number of obsticles (cows)
     
     
     obst_coord = np.random.rand(n_obst, 2)
