@@ -1,0 +1,5 @@
+- [ ] Improve code documentations
+- [ ] Split step 2&3 into separate functions
+- [ ] Give the option to chose the start and end point
+- [ ] sys.argv not yet working
+- [x] plt.show() get it running? (just run Xlaunch)

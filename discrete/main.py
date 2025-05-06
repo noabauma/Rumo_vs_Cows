@@ -12,35 +12,57 @@ I.e. we are searching for the path of least resistance.
 
 
 def cost_function(cow_coord: np.ndarray, rumo_coord: np.ndarray):
-    """_summary_
+    """Cost function to compute the cost to stay on this given node to a cow.
 
     Args:
-        cow_coord (np.ndarray): _description_
-        rumo_coord (np.ndarray): _description_
+        cow_coord (np.ndarray): the 2d coordinate of a cow.
+        rumo_coord (np.ndarray): the current 2d coordinate of rumo.
     """
     crit_dist = 10    # critical distance between cows [m] closer than this will lead to rumo barking
     
     return max(1 - np.linalg.norm(cow_coord - rumo_coord)/crit_dist, 0.1)
+
+def swap_nodes_csr(G, i, j):
+    """Swap nodes i and j in the csr graph
+
+    Args:
+        G (csr_matrix): The graph
+        i (int): The index of the first node
+        j (int): The index of the second node
+
+    Returns:
+        csr_matrix: The swapped graph
+    """
+    # Convert to LIL format for easier row and column manipulation
+    G = G.tolil()
+
+    # Swap rows i and j
+    G[[i, j], :] = G[[j, i], :]
+
+    # Swap columns i and j
+    G[:, [i, j]] = G[:, [j, i]]
+
+    return G.tocsr()
     
 
 
-def build_voronoi_graph(obst_coord: np.ndarray, x_length: float = 1, y_length: float = 1) -> np.ndarray:
-    """This function computes the 2D Voronoi Map of the cows field in an discrete way.
-        Thew algorithm computes a head map of how close rumo is allowed to come.
+def build_graph(obst_coord: np.ndarray, x_length: float = 1, y_length: float = 1, grid_spacing: float = 1):
+    """This function computes the heatmap of the cows as a graph.
+        The algorithm computes a head map of how close rumo is allowed to come.
         Graph is connected by the 8 neighbours.
 
     Args:
-        obst_coord (np.ndarray): [description]
-        x_length (float, optional): [description]. Defaults to 1.
-        y_length (float, optional): [description]. Defaults to 1.
+        obst_coord (np.ndarray): The 2d coordinates of all the cows
+        x_length (float, optional): The x length of the field. Defaults to 1.
+        y_length (float, optional): The y length of the field. Defaults to 1.
+        grid_spacing (float, optional): The spacing of the grid points [m]. Defaults to 1.
 
     Returns:
         np.ndarray: The grid points with their weights shape (n_total_points, 3)
-        np.ndarray: The graph shape (n_total_points, n_total_points)
+        csr matrix: The graph of shape (n_total_points*8, 3)
     """
-    point_spacing = 1      # spacing of the grid points [m]
-    n_grid_points_x = int(x_length/point_spacing + 1)    # number of grid points in the x-dimension
-    n_grid_points_y = int(y_length/point_spacing + 1)    # number of grid points in the y-dimension
+    n_grid_points_x = int(x_length/grid_spacing + 1)    # number of grid points in the x-dimension
+    n_grid_points_y = int(y_length/grid_spacing + 1)    # number of grid points in the y-dimension
     n_total_points = n_grid_points_x*n_grid_points_y
     
     # Step 1: Generate equally spaced points between in the x and y dimensions
@@ -65,13 +87,13 @@ def build_voronoi_graph(obst_coord: np.ndarray, x_length: float = 1, y_length: f
         # store the cost
         grid_point[2] = cost
 
-    
+
     # create the dense matrix for the graph (zero means no connection)
     graph = np.zeros((n_total_points, n_total_points))
     
     # now transform node weights into edge weights
     # nodes are connected by the 8 neighbours
-    # we have to be careful with the boundary conditions
+    # we have to be careful with the boundaries as we don't want to go out of bounds.
     # 
     #   y
     #   ^
@@ -81,39 +103,39 @@ def build_voronoi_graph(obst_coord: np.ndarray, x_length: float = 1, y_length: f
     #
     for i in range(n_total_points):
         
-        # left
+        # left boundary
         if i % n_grid_points_x != 0:
             graph[i, i-1] = (grid_points[i, 2] + grid_points[i-1, 2])/2
             
-        # right
+        # right boundary
         if i % n_grid_points_x != n_grid_points_x-1:
             graph[i, i+1] = (grid_points[i, 2] + grid_points[i+1, 2])/2
         
-        # top
+        # top boundary
         if i < n_total_points - n_grid_points_x:
             graph[i, i+n_grid_points_x] = (grid_points[i, 2] + grid_points[i+n_grid_points_x, 2])/2
             
-            # top left
+            # top left corner
             if i % n_grid_points_x != 0:
                 graph[i, i+n_grid_points_x-1] = (grid_points[i, 2] + grid_points[i+n_grid_points_x-1, 2])/2
                 
-            # top right
+            # top right corner
             if i % n_grid_points_x != n_grid_points_x-1:
                 graph[i, i+n_grid_points_x+1] = (grid_points[i, 2] + grid_points[i+n_grid_points_x+1, 2])/2
         
-        # bottom
+        # bottom boundary
         if i > n_grid_points_x-1:
             graph[i, i-n_grid_points_x] = (grid_points[i, 2] + grid_points[i-n_grid_points_x, 2])/2
             
-            # bottom left
+            # bottom left corner
             if i % n_grid_points_x != 0:
                 graph[i, i-n_grid_points_x-1] = (grid_points[i, 2] + grid_points[i-n_grid_points_x-1, 2])/2
             
-            # bottom right
+            # bottom right corner
             if i % n_grid_points_x != n_grid_points_x-1:
                 graph[i, i-n_grid_points_x+1] = (grid_points[i, 2] + grid_points[i-n_grid_points_x+1, 2])/2
 
-    # convert the graph into a sparse matrix (for efficiency)
+    # convert the graph into CSR format (for efficiency)
     graph = csr_matrix(graph)
 
     return grid_points, graph
@@ -125,13 +147,13 @@ def main():
     It consists of:
     
     1. Building the Problem field
-    2. Computing the special Voronoi Map
-    3. Converting it into a weighted Graph
-    4. Shortest Path Algorithm
+    2. Computing the 2d heatmap of the cows in the field
+    3. Converting the heatmap into a weighted graph
+    4. Compute shortest path
     5. Plot
     """
     
-    # Step 1: Let's build the problem field
+    #### Step 1: Let's build the problem field
     if len(sys.argv) >= 4:
         x_length = int(sys.argv[1])
         y_length = int(sys.argv[2])
@@ -145,22 +167,34 @@ def main():
     else:
         x_length = 50        # x coordinate of the cows field [m]
         y_length = 50        # y coordinate of the cows field [m]
-        n_obst = 10           # number of obsticles (cows)
-    
+        n_obst = 10          # number of obsticles (cows)
+        
+        np.random.seed(42)   # seed for the random number generator
+        
+    grid_spacing = 1        # spacing of the grid points [m]
     
     obst_coord = np.random.rand(n_obst, 2)
     
     obst_coord[:,0] *= x_length
     obst_coord[:,1] *= y_length
 
-    # Step 2 & 3: Let's build the heat map via a self-made voronoi approach as we need to store the weights of the points
-    grid_points, graph = build_voronoi_graph(obst_coord, x_length, y_length)
+    #### Step 2 & 3: Let's build the heat map via a self-made voronoi approach as we need to store the weights of the points
+    grid_points, graph = build_graph(obst_coord, x_length, y_length, grid_spacing)
     
     # define the starting and end points (as indices in the graph)
     start_coord = 0
     end_coord = -1
     
-    # Step 4: Compute the shortest path
+    start_coord = int(np.random.random_sample()*x_length + 0.5)
+    end_coord = int(np.random.random_sample()*x_length + 0.5)
+    
+    print(start_coord, end_coord)
+    
+    print(graph)
+    
+    # as the first 
+    
+    #### Step 4: Compute the shortest path
     dist_matrix, predecessors = shortest_path(csgraph=graph, directed=False, indices=start_coord, return_predecessors=True)
     
     # Backtrack to find the shortest path from source to destination
@@ -177,13 +211,16 @@ def main():
     y_coords = grid_points[path, 1]
     
     
-    # Step 5: Plot
+    #### Step 5: Plot
+    
+    # Plot the shortest path
     plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
     
+    # Plot the start and end points
     plt.plot(grid_points[start_coord, 0], grid_points[start_coord, 1], marker='x', linestyle='-', color='red', markersize=8)
     plt.plot(grid_points[end_coord, 0], grid_points[end_coord, 1], marker='x', linestyle='-', color='red', markersize=8)
 
-    # Show the plot
+    # Plot the heatmap
     weights = grid_points[:, 2].reshape((y_length+1, x_length+1))
     plt.imshow(weights, origin='lower', extent=(0, x_length, 0, y_length), cmap='hot', interpolation='nearest')
     plt.colorbar(label='Cost')
