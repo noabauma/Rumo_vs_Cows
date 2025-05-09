@@ -166,8 +166,8 @@ def main():
         
     else:
         x_length = 50        # x coordinate of the cows field [m]
-        y_length = 50        # y coordinate of the cows field [m]
-        n_obst = 10          # number of obsticles (cows)
+        y_length = 100        # y coordinate of the cows field [m]
+        n_obst = 30          # number of obsticles (cows)
         
         np.random.seed(42)   # seed for the random number generator
         
@@ -181,21 +181,17 @@ def main():
     #### Step 2 & 3: Let's build the heat map via a self-made voronoi approach as we need to store the weights of the points
     grid_points, graph = build_graph(obst_coord, x_length, y_length, grid_spacing)
     
-    # define the starting and end points (as indices in the graph)
-    start_coord = 0
-    end_coord = -1
-    
-    start_coord = int(np.random.random_sample()*x_length + 0.5)
-    end_coord = int(np.random.random_sample()*x_length + 0.5)
+    # define the starting and end points (as indices in the graph)    
+    start_coord = int(np.random.random_sample()*x_length + 0.5)                         # 0
+    end_coord = grid_points.shape[0] - int(np.random.random_sample()*x_length + 0.5)    # -1
     
     print(start_coord, end_coord)
     
-    print(graph)
-    
-    # as the first 
+    # swap the end point with the current last one
+    swap_nodes_csr(graph, end_coord, -1)
     
     #### Step 4: Compute the shortest path
-    dist_matrix, predecessors = shortest_path(csgraph=graph, directed=False, indices=start_coord, return_predecessors=True)
+    dist_matrix, predecessors = shortest_path(csgraph=graph, method='auto', directed=False, indices=start_coord, return_predecessors=True)
     
     # Backtrack to find the shortest path from source to destination
     path = []
@@ -217,7 +213,7 @@ def main():
     plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
     
     # Plot the start and end points
-    plt.plot(grid_points[start_coord, 0], grid_points[start_coord, 1], marker='x', linestyle='-', color='red', markersize=8)
+    plt.plot(grid_points[start_coord, 0], grid_points[start_coord, 1], marker='x', linestyle='-', color='green', markersize=8)
     plt.plot(grid_points[end_coord, 0], grid_points[end_coord, 1], marker='x', linestyle='-', color='red', markersize=8)
 
     # Plot the heatmap
