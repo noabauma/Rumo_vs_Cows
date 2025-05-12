@@ -14,15 +14,7 @@ np.random.seed(42)
 
 
 def cost_function(cow_coord: np.ndarray, rumo_coord: np.ndarray):
-    """_summary_
-
-    Args:
-        cow_coord (np.ndarray): _description_
-        rumo_coord (np.ndarray): _description_
-    """
-    crit_dist = 10    # critical distance between cows [m] closer than this will lead to rumo barking
-    
-    return max(1 - np.linalg.norm(cow_coord - rumo_coord)/crit_dist, 0.0)
+    return np.linalg.norm(cow_coord - rumo_coord)
     
             
 
@@ -39,27 +31,30 @@ def main():
     """
     
     # Step 1: Let's build the problem field
-    x_length = 50        # x coordinate of the cows field [m]
-    y_length = 50        # y coordinate of the cows field [m]
-    n_obst = 10           # number of obsticles (cows)
+    x_length = 4        # x coordinate of the cows field [m]
+    y_length = 4        # y coordinate of the cows field [m]
     
-    
+    n_obst = 9          # number of obsticles (cows)
     obst_coord = np.random.rand(n_obst, 2)
-    
-    # define the starting and end points (as indices in the graph)
-    start_coord = "top"
-    end_coord = "bottom"
-
     obst_coord[:,0] *= x_length
     obst_coord[:,1] *= y_length
     
+    #obst_coord = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]]) + 1
+    #n_obst = len(obst_coord)          # number of obsticles (cows)
+    
+    # define the starting and end points (as indices in the graph)
+    start_coord = 0
+    end_coord = -1
+
+    
     # Step 2 & 3: Let's build the heat map via a self-made voronoi approach as we need to store the weights of the points
-    vor = Voronoi(obst_coord)
+    vor = Voronoi(obst_coord, furthest_site=False)
     
     print(vor.vertices)
     print(vor.ridge_vertices)
     
     # delete the vertices that are outside the field
+    """
     keep_nodes = []
     for i in range(len(vor.vertices)):
         if vor.vertices[i, 0] >= 0 and vor.vertices[i, 0] <= x_length and vor.vertices[i, 1] >= 0 and vor.vertices[i, 1] <= y_length:
@@ -75,47 +70,33 @@ def main():
             keep_edges.append(i)
     
     vor_edges = np.copy(np.array(vor.ridge_vertices)[keep_edges])
+    """
     
-    print(vor_nodes)
-    print(vor_edges)
+    # Draw the middle points of the ridges (also add weight and if on a infinit line)
+    middle_points = np.empty((len(vor.ridge_points), 4))
+    for i, ridge_point in enumerate(vor.ridge_points):
+        middle_points[i, 0:2] = np.array(obst_coord[ridge_point[0]] + obst_coord[ridge_point[1]])/2
+        middle_points[i, 2] = cost_function(obst_coord[ridge_point[0]], obst_coord[ridge_point[1]])
+        middle_points[i, 3] = vor.ridge_vertices[i][0] != -1
+        
+    print(middle_points)
     
-    fig = voronoi_plot_2d(vor, further_site=True)
+    fig = voronoi_plot_2d(vor)
+    plt.xlim(0, x_length)
+    plt.ylim(0, y_length)
+    
+    colors = ['green' if label else 'red' for label in middle_points[:,3]]
+    
+    plt.scatter(middle_points[:,0], middle_points[:,1], c=colors, s=50, edgecolors='black')
+
+    # Draw the square bounding box
+    plt.plot([0, x_length, x_length, 0, 0],
+            [0, 0, y_length, y_length, 0],
+            'k--', lw=2)
+
     plt.savefig('heatmap2.png')
     plt.show()
     
-    # # Step 4: Compute the shortest path
-    # dist_matrix, predecessors = shortest_path(csgraph=graph, directed=False, indices=start_coord, return_predecessors=True)
-    
-    # # Backtrack to find the shortest path from source to destination
-    # path = []
-    # step = end_coord
-    # while step != start_coord:
-    #     path.append(step)
-    #     step = predecessors[step]
-
-    # path.append(start_coord)
-    # path = path[::-1]  # Reverse the path to get it from source to destination
-    
-    # x_coords = grid_points[path, 0]
-    # y_coords = grid_points[path, 1]
-    
-    
-    # # Step 5: Plot
-    # plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
-    
-    # plt.plot(grid_points[start_coord, 0], grid_points[start_coord, 1], marker='x', linestyle='-', color='red', markersize=8)
-    # plt.plot(grid_points[end_coord, 0], grid_points[end_coord, 1], marker='x', linestyle='-', color='red', markersize=8)
-
-    # # Show the plot
-    # weights = grid_points[:, 2].reshape((y_length+1, x_length+1))
-    # plt.imshow(weights, origin='lower', extent=(0, x_length, 0, y_length), cmap='hot', interpolation='nearest')
-    # plt.colorbar(label='Cost')
-    
-    
-    # plt.title('Heatmap with Shortest Path')
-    # plt.xlabel('X Axis')
-    # plt.ylabel('Y Axis')
-    # plt.show()
     
     
      
