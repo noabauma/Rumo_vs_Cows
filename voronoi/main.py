@@ -42,6 +42,36 @@ def main():
     #obst_coord = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]]) + 1
     #n_obst = len(obst_coord)          # number of obsticles (cows)
     
+    # Mirroring
+    # top
+    top = np.array((obst_coord[:,0],2*y_length-obst_coord[:,1])).T
+    
+    # left
+    left = np.array((-obst_coord[:,0],obst_coord[:,1])).T
+    
+    # right
+    right = np.array((2*x_length-obst_coord[:,0],obst_coord[:,1])).T
+    
+    # bottom
+    bottom = np.array((obst_coord[:,0],-obst_coord[:,1])).T
+    
+    # top left
+    tl = np.array((-obst_coord[:,0],2*y_length-obst_coord[:,1])).T
+    
+    # top right
+    tr = np.array((2*x_length-obst_coord[:,0],2*y_length-obst_coord[:,1])).T
+    
+    # bottom left
+    bl = np.array((-obst_coord[:,0],-obst_coord[:,1])).T
+    
+    # bottom right
+    br = np.array((2*x_length-obst_coord[:,0],-obst_coord[:,1])).T
+    
+    og_obst_coord = np.copy(obst_coord)
+    obst_coord = np.vstack((obst_coord, top, left, right, bottom, tl, tr, bl, br))
+    print(left.shape, obst_coord.shape)    
+
+    
     # define the starting and end points (as indices in the graph)
     start_coord = 0
     end_coord = -1
@@ -54,7 +84,7 @@ def main():
     print(vor.ridge_vertices)
     
     # delete the vertices that are outside the field
-    """
+    
     keep_nodes = []
     for i in range(len(vor.vertices)):
         if vor.vertices[i, 0] >= 0 and vor.vertices[i, 0] <= x_length and vor.vertices[i, 1] >= 0 and vor.vertices[i, 1] <= y_length:
@@ -70,7 +100,7 @@ def main():
             keep_edges.append(i)
     
     vor_edges = np.copy(np.array(vor.ridge_vertices)[keep_edges])
-    """
+    
     
     # Draw the middle points of the ridges (also add weight and if on a infinit line)
     middle_points = np.empty((len(vor.ridge_points), 4))
@@ -82,8 +112,8 @@ def main():
     print(middle_points)
     
     fig = voronoi_plot_2d(vor)
-    plt.xlim(0, x_length)
-    plt.ylim(0, y_length)
+    #plt.xlim(0, x_length)
+    #plt.ylim(0, y_length)
     
     colors = ['green' if label else 'red' for label in middle_points[:,3]]
     
