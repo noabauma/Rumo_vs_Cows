@@ -13,8 +13,41 @@ I.e. we are searching for the path of least resistance.
 np.random.seed(42)
 
 
-def cost_function(cow_coord: np.ndarray, rumo_coord: np.ndarray):
-    return np.linalg.norm(cow_coord - rumo_coord)
+def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
+    """Cost function to determine the cost of crossing this edge
+
+    Args:
+        a (np.array): Starting coordinates in 2d
+        b (np.array): End coordinate in 2d
+        c1 (np.array): cow 1 coordinate in 2d
+        c2 (np.array): cow 2 coordinate in 2d
+
+    Returns:
+        cost (float): The cost of crossing this edge
+    """
+    crit_dist = 5    # critical distance between cows [m] closer than this will lead to rumo barking
+    
+    m = (c1 + c2)/2 # middle_point
+    
+    # now we have to check if the middle_point m between the cows is actually on the vertex.
+    # If not, the point (a or b) which is the closest to the cow will be cost of crossing the edge
+    
+    # step 1: check if m lies between
+    
+    # a + t*(b - a) = m if t in [0, 1] m is in between, if t in (-inf, 0) closer to a and if t in (1, inf) closer to b
+    
+    t = np.dot(b - a, m - a)/np.dot(b - a, b - a)
+    
+    if t < 0:
+        cost = max(1 - np.linalg.norm(c1 - a)/crit_dist, 0.1)
+    elif 0 <= t < 1:
+        cost = max(1 - np.linalg.norm(c1 - m)/crit_dist, 0.1)
+    else:
+        cost = max(1 - np.linalg.norm(c1 - b)/crit_dist, 0.1)
+        
+    print(cost, t)
+    
+    return cost, t
     
             
 
@@ -34,7 +67,7 @@ def main():
     x_length = 4        # x coordinate of the cows field [m]
     y_length = 4        # y coordinate of the cows field [m]
     
-    n_obst = 9          # number of obsticles (cows)
+    n_obst = 3          # number of obsticles (cows)
     obst_coord = np.random.rand(n_obst, 2)
     obst_coord[:,0] *= x_length
     obst_coord[:,1] *= y_length
@@ -68,8 +101,7 @@ def main():
     br = np.array((2*x_length-obst_coord[:,0],-obst_coord[:,1])).T
     
     og_obst_coord = np.copy(obst_coord)
-    obst_coord = np.vstack((obst_coord, top, left, right, bottom, tl, tr, bl, br))
-    print(left.shape, obst_coord.shape)    
+    obst_coord = np.vstack((obst_coord, top, left, right, bottom, tl, tr, bl, br))  
 
     
     # define the starting and end points (as indices in the graph)
@@ -80,17 +112,14 @@ def main():
     # Step 2 & 3: Let's build the heat map via a self-made voronoi approach as we need to store the weights of the points
     vor = Voronoi(obst_coord, furthest_site=False)
     
-    print(vor.vertices)
-    print(vor.ridge_vertices)
-    
     # delete the vertices that are outside the field
+    eps = 1e-8
     
     keep_nodes = []
     for i in range(len(vor.vertices)):
-        if vor.vertices[i, 0] >= 0 and vor.vertices[i, 0] <= x_length and vor.vertices[i, 1] >= 0 and vor.vertices[i, 1] <= y_length:
+        if vor.vertices[i, 0] >= -eps and vor.vertices[i, 0] <= x_length+eps and vor.vertices[i, 1] >= -eps and vor.vertices[i, 1] <= y_length+eps:
             keep_nodes.append(i)
     
-    print(keep_nodes)
     
     vor_nodes = np.copy(vor.vertices[keep_nodes])
     
@@ -103,21 +132,43 @@ def main():
     
     
     # Draw the middle points of the ridges (also add weight and if on a infinit line)
-    middle_points = np.empty((len(vor.ridge_points), 4))
+    # one middle_point consists of: [start_idx, end_idx, cost, t]
+    # start_idx: starting ridge_point idx
+    # end_idx: ending ridge_point idx
+    # cost: the cost of crossing this edge
+    middle_points = []
     for i, ridge_point in enumerate(vor.ridge_points):
-        middle_points[i, 0:2] = np.array(obst_coord[ridge_point[0]] + obst_coord[ridge_point[1]])/2
-        middle_points[i, 2] = cost_function(obst_coord[ridge_point[0]], obst_coord[ridge_point[1]])
-        middle_points[i, 3] = vor.ridge_vertices[i][0] != -1
-        
+        if ridge_point[0] < n_obst and ridge_point[1] < n_obst:
+            middle_point = np.empty((6))
+            
+            assert vor.ridge_vertices[i][0] != -1, "Somehow, this vertex has only one voronoi node. Should not happen with Jonah's mirroring technique!"
+
+            middle_point[0:2] = vor.ridge_vertices[i]
+            
+            middle_point[2:4] = cost_function(vor.vertices[vor.ridge_vertices[i][0]], vor.vertices[vor.ridge_vertices[i][1]], obst_coord[ridge_point[0]], obst_coord[ridge_point[1]])
+            middle_point[4:6] = np.array(obst_coord[ridge_point[0]] + obst_coord[ridge_point[1]])/2
+            
+            middle_points.append(middle_point)
+            
+    middle_points = np.array(middle_points)
+            
     print(middle_points)
+            
+
+    # Difficult part use the middle points
+    
     
     fig = voronoi_plot_2d(vor)
-    #plt.xlim(0, x_length)
-    #plt.ylim(0, y_length)
+    plt.xlim(0, x_length)
+    plt.ylim(0, y_length)
     
-    colors = ['green' if label else 'red' for label in middle_points[:,3]]
+    colors = ['green' if (0.0 <= t < 1.0) else 'red' for t in middle_points[:,3]]
     
-    plt.scatter(middle_points[:,0], middle_points[:,1], c=colors, s=50, edgecolors='black')
+    plt.scatter(middle_points[:,4], middle_points[:,5], c=colors, s=50, edgecolors='black')
+    
+    plt.scatter(og_obst_coord[:,0], og_obst_coord[:,1], c='pink', s=50)
+    
+    plt.scatter(vor_nodes[:,0], vor_nodes[:,1], c='yellow', s=50, edgecolors='black')
 
     # Draw the square bounding box
     plt.plot([0, x_length, x_length, 0, 0],
