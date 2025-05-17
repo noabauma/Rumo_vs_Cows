@@ -118,7 +118,6 @@ def main():
         if vor.vertices[i, 0] >= -eps and vor.vertices[i, 0] <= x_length+eps and vor.vertices[i, 1] >= -eps and vor.vertices[i, 1] <= y_length+eps:
             keep_nodes.append(i)
     
-    
     vor_nodes = np.copy(vor.vertices[keep_nodes])
     
     keep_edges = []
@@ -160,11 +159,36 @@ def main():
     # Next step: store everything into a weightes CSR graph file
     
     # First, make a mapping of the vor.vertices to arange as CSR starts from 0, n_points -1.
-    all_idx = np.unique(middle_points[:,0:2])
+    all_idx = np.unique(middle_points[:,0:2]).astype(int)
     
-    # TODO: define the end and starting point by shuffeling the all_idx! (amazing)
-    # choose the one closest to the random sampled once
+    # We define the end and starting point by shuffeling the all_idx! (amazing)
+    # We choose the points which are the closest to the ridge point as the starting and end point
+    # The starting point will start on a point on the lower boundary
+    # and the end point on a point on the upper boundary
+    closest_to_start = (-1, x_length)
+    closest_to_end = (-1, x_length)
+    for idx in all_idx:
+        vor_vertex = vor.vertices[idx]
+        if vor_vertex[1] == 0.:
+            dist = abs(vor_vertex[0] - start_coord)
+            
+            if dist < closest_to_start[1]:
+                closest_to_start = (idx, dist)
+                
+        elif vor_vertex[1] == y_length:
+            dist = abs(vor_vertex[0] - end_coord)
+            
+            if dist < closest_to_end[1]:
+                closest_to_end = (idx, dist)
+                
+    assert closest_to_start[0] != -1, "didn't find a closest point on the lower boundary"
+    assert closest_to_end[0] != -1, "didn't find a closest point on the upper boundary"   
     
+    start_idx = np.where(all_idx == closest_to_start[0])[0][0]
+    end_idx = np.where(all_idx == closest_to_end[0])[0][0]  
+                
+    all_idx[0], all_idx[start_idx] = all_idx[start_idx], all_idx[0]
+    all_idx[-1], all_idx[end_idx] = all_idx[end_idx], all_idx[-1]
     
     n_nodes = len(all_idx)
     graph = np.zeros((n_nodes, n_nodes))
@@ -173,16 +197,35 @@ def main():
         j = np.where(all_idx == middle_point[1])[0][0]
         cost = middle_point[2]
         graph[i,j] = cost
-        
-    print(graph)
     
     graph = csr_matrix(graph)
     
+    #### Step 4: Compute the shortest path
+    dist_matrix, predecessors = shortest_path(csgraph=graph, method='auto', directed=False, indices=0, return_predecessors=True)
     
+    # Backtrack to find the shortest path from source to destination
+    path = []
+    step = -1
+    while step != 0:
+        path.append(step)
+        step = predecessors[step]
+
+    path.append(0)
+    path = path[::-1]  # Reverse the path to get it from source to destination
+    
+    #### Step 5: Plot
+    
+    # plot voronoi
     fig = voronoi_plot_2d(vor)
-    margin = max(x_length, y_length)/20.0
-    plt.xlim(-margin, x_length + margin)
-    plt.ylim(-margin, y_length + margin)
+    
+    # Plot the shortest path
+    print(path)
+    print(all_idx[path])
+    
+    x_coords = vor.vertices[all_idx[path], 0]
+    y_coords = vor.vertices[all_idx[path], 1]
+    print(x_coords)
+    plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
     
     colors = ['green' if (0.0 < t < 1.0) else 'red' for t in middle_points[:,3]]
     
@@ -196,6 +239,10 @@ def main():
     plt.plot([0, x_length, x_length, 0, 0],
             [0, 0, y_length, y_length, 0],
             'k--', lw=2)
+    
+    margin = max(x_length, y_length)/20.0
+    plt.xlim(-margin, x_length + margin)
+    plt.ylim(-margin, y_length + margin)
 
     plt.savefig('heatmap2.png')
     plt.show()

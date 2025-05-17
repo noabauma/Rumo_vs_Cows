@@ -203,13 +203,11 @@ def main():
     path.append(start_coord)
     path = path[::-1]  # Reverse the path to get it from source to destination
     
-    x_coords = grid_points[path, 0]
-    y_coords = grid_points[path, 1]
-    
-    
     #### Step 5: Plot
     
     # Plot the shortest path
+    x_coords = grid_points[path, 0]
+    y_coords = grid_points[path, 1]
     plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
     
     # Plot the start and end points
