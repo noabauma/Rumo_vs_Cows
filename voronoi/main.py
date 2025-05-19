@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi, voronoi_plot_2d
@@ -29,106 +30,39 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     
     m = (c1 + c2)/2 # middle_point
     
-    # now we have to check if the middle_point m between the cows is actually on the vertex.
-    # If not, the point (a or b) which is the closest to the cow will be cost of crossing the edge
-    
-    # step 1: check if m lies between
-    
-    # a + t*(b - a) = m if t in [0, 1] m is in between, if t in (-inf, 0) closer to a and if t in (1, inf) closer to b
+    # now we have to check if the middle_point m between is actually on the vertex.
+    # If not, the point (a or b) which is the closest to the cow will be the cost of crossing the edge
+
+    # If t in [0, 1]: m is in between, if t in (-inf, 0): m closer to a and if t in (1, inf): closer to b
     
     t = np.dot(b - a, m - a)/np.dot(b - a, b - a)
     
-    if t < 0:
-        cost = max(1 - np.linalg.norm(c1 - a)/crit_dist, 0.1)
-    elif 0 <= t < 1:
+    if 0 <= t <= 1:
         cost = max(1 - np.linalg.norm(c1 - m)/crit_dist, 0.1)
+        #cost = max(1/np.dot(c1 - m, c1 - m), 0.1)
+    elif t < 0:
+        cost = max(1 - np.linalg.norm(c1 - a)/crit_dist, 0.1)
+        #cost = max(1/np.dot(c1 - a, c1 - a), 0.1)
     else:
         cost = max(1 - np.linalg.norm(c1 - b)/crit_dist, 0.1)
+        #cost = max(1/np.dot(c1 - b, c1 - b), 0.1)
     
     return cost, t
     
-            
+def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: float, y_length: float, start_coord: float, end_coord: float):
+    """AI is creating summary for compute_graph
 
-def main():
+    Args:
+        vor (Voronoi): [description]
+        obst_coord (np.array): [description]
+        n_obst (int): [description]
+        x_length (float): [description]
+        y_length (float): [description]
+        start_coord (float): [description]
+        end_coord (float): [description]
     """
-    The main function to run the whole algorithm.
-    It consists of:
     
-    1. Building the Problem field
-    2. Computing the special Voronoi Map
-    3. Converting it into a weighted Graph
-    4. Shortest Path Algorithm
-    5. Plot
-    """
-    
-    # Step 1: Let's build the problem field
-    x_length = 4        # x coordinate of the cows field [m]
-    y_length = 4        # y coordinate of the cows field [m]
-    
-    n_obst = 3          # number of obsticles (cows)
-    obst_coord = np.random.rand(n_obst, 2)
-    obst_coord[:,0] *= x_length
-    obst_coord[:,1] *= y_length
-    
-    #obst_coord = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]]) + 1
-    #n_obst = len(obst_coord)          # number of obsticles (cows)
-    
-    # Mirroring
-    # top
-    top = np.array((obst_coord[:,0],2*y_length-obst_coord[:,1])).T
-    
-    # left
-    left = np.array((-obst_coord[:,0],obst_coord[:,1])).T
-    
-    # right
-    right = np.array((2*x_length-obst_coord[:,0],obst_coord[:,1])).T
-    
-    # bottom
-    bottom = np.array((obst_coord[:,0],-obst_coord[:,1])).T
-    
-    # top left
-    tl = np.array((-obst_coord[:,0],2*y_length-obst_coord[:,1])).T
-    
-    # top right
-    tr = np.array((2*x_length-obst_coord[:,0],2*y_length-obst_coord[:,1])).T
-    
-    # bottom left
-    bl = np.array((-obst_coord[:,0],-obst_coord[:,1])).T
-    
-    # bottom right
-    br = np.array((2*x_length-obst_coord[:,0],-obst_coord[:,1])).T
-    
-    og_obst_coord = np.copy(obst_coord)
-    obst_coord = np.vstack((obst_coord, top, left, right, bottom, tl, tr, bl, br))  
-
-    
-    # define the starting and end points (as indices in the graph)
-    start_coord = np.random.random_sample()*x_length
-    end_coord = np.random.random_sample()*x_length
-
-    
-    # Step 2 & 3: Let's build the heat map via a self-made voronoi approach as we need to store the weights of the points
-    vor = Voronoi(obst_coord, furthest_site=False)
-    
-    # delete the vertices that are outside the field
-    eps = 1e-8
-    
-    keep_nodes = []
-    for i in range(len(vor.vertices)):
-        if vor.vertices[i, 0] >= -eps and vor.vertices[i, 0] <= x_length+eps and vor.vertices[i, 1] >= -eps and vor.vertices[i, 1] <= y_length+eps:
-            keep_nodes.append(i)
-    
-    vor_nodes = np.copy(vor.vertices[keep_nodes])
-    
-    keep_edges = []
-    for i in range(len(vor.ridge_vertices)):
-        if vor.ridge_vertices[i][0] != -1:
-            keep_edges.append(i)
-    
-    vor_edges = np.copy(np.array(vor.ridge_vertices)[keep_edges])
-    
-    
-    # Draw the middle points of the ridges (also add weight and if on a infinit line)
+    # We start with computing all the middle points of the ridges (also add weight and other important stuff)
     # one middle_point consists of: [start_idx, end_idx, cost, t, x_coord, y_coord]
     # start_idx: starting ridge_point idx
     # end_idx: ending ridge_point idx
@@ -154,7 +88,7 @@ def main():
             
     middle_points = np.array(middle_points)
     
-    print(middle_points)
+    #print(middle_points)
     
     # Next step: store everything into a weightes CSR graph file
     
@@ -162,9 +96,10 @@ def main():
     all_idx = np.unique(middle_points[:,0:2]).astype(int)
     
     # We define the end and starting point by shuffeling the all_idx! (amazing)
-    # We choose the points which are the closest to the ridge point as the starting and end point
+    # The first index is the starting point and the last index the end point
     # The starting point will start on a point on the lower boundary
     # and the end point on a point on the upper boundary
+    # We choose the start/endpoints which are the closest to the ridge point on the respective boundaries
     closest_to_start = (-1, x_length)
     closest_to_end = (-1, x_length)
     for idx in all_idx:
@@ -198,9 +133,74 @@ def main():
         cost = middle_point[2]
         graph[i,j] = cost
     
-    graph = csr_matrix(graph)
+    return csr_matrix(graph), all_idx
+            
+
+def main():
+    """
+    The main function to run the whole algorithm.
+    It consists of:
     
-    #### Step 4: Compute the shortest path
+    1. Defining the problem field (#cows, dimensions, start/end point, ...)
+    2. Computing the Voronoi map
+    3. Computing the cost of the edges and store it as a weighted graph
+    4. Computing the shortest path
+    5. Plot
+    """
+    
+    time_start = time.time()
+    
+    ##### Step 1: Defining the problem field
+    
+    x_length = 50        # x coordinate of the cows field [m]
+    y_length = 100        # y coordinate of the cows field [m]
+    n_obst = 100          # number of obsticles (cows)
+    
+    obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
+    obst_coord[:,0] *= x_length
+    obst_coord[:,1] *= y_length
+    
+    # Mirroring the cow field as we also need the voronoi edge on the on the boundaries
+    # top
+    top = np.array((obst_coord[:,0],2*y_length-obst_coord[:,1])).T
+    
+    # left
+    left = np.array((-obst_coord[:,0],obst_coord[:,1])).T
+    
+    # right
+    right = np.array((2*x_length-obst_coord[:,0],obst_coord[:,1])).T
+    
+    # bottom
+    bottom = np.array((obst_coord[:,0],-obst_coord[:,1])).T
+    
+    # top left
+    tl = np.array((-obst_coord[:,0],2*y_length-obst_coord[:,1])).T
+    
+    # top right
+    tr = np.array((2*x_length-obst_coord[:,0],2*y_length-obst_coord[:,1])).T
+    
+    # bottom left
+    bl = np.array((-obst_coord[:,0],-obst_coord[:,1])).T
+    
+    # bottom right
+    br = np.array((2*x_length-obst_coord[:,0],-obst_coord[:,1])).T
+    
+    og_obst_coord = np.copy(obst_coord) # only for plotting (debugging)
+    obst_coord = np.vstack((obst_coord, top, left, right, bottom, tl, tr, bl, br))  
+
+    
+    # define the starting and end points (as random coordinates on the top and bottom boundary)
+    start_coord = np.random.random_sample()*x_length
+    end_coord = np.random.random_sample()*x_length
+
+    
+    ##### Step 2: Computing the Voronoi map
+    vor = Voronoi(obst_coord, furthest_site=False)
+    
+    ##### Step 3: building the weighted graph
+    graph, all_idx = compute_graph(vor, obst_coord, n_obst, x_length, y_length, start_coord, end_coord)
+    
+    ##### Step 4: Compute the shortest path
     dist_matrix, predecessors = shortest_path(csgraph=graph, method='auto', directed=False, indices=0, return_predecessors=True)
     
     # Backtrack to find the shortest path from source to destination
@@ -213,27 +213,22 @@ def main():
     path.append(0)
     path = path[::-1]  # Reverse the path to get it from source to destination
     
-    #### Step 5: Plot
+    print("total runtime: ", time.time() - time_start, "[s]")
+    
+    ##### Step 5: Plot
     
     # plot voronoi
-    fig = voronoi_plot_2d(vor)
+    #fig = voronoi_plot_2d(vor)
     
-    # Plot the shortest path
-    print(path)
-    print(all_idx[path])
-    
+    # Plot the shortest path    
     x_coords = vor.vertices[all_idx[path], 0]
     y_coords = vor.vertices[all_idx[path], 1]
-    print(x_coords)
     plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
     
-    colors = ['green' if (0.0 < t < 1.0) else 'red' for t in middle_points[:,3]]
-    
-    plt.scatter(middle_points[:,4], middle_points[:,5], c=colors, s=50, edgecolors='black')
+    #colors = ['green' if (0.0 < t < 1.0) else 'red' for t in middle_points[:,3]]
+    #plt.scatter(middle_points[:,4], middle_points[:,5], c=colors, s=50, edgecolors='black')
     
     plt.scatter(og_obst_coord[:,0], og_obst_coord[:,1], c='pink', s=50)
-    
-    plt.scatter(vor_nodes[:,0], vor_nodes[:,1], c='yellow', s=50, edgecolors='black')
 
     # Draw the square bounding box
     plt.plot([0, x_length, x_length, 0, 0],
@@ -244,12 +239,12 @@ def main():
     plt.xlim(-margin, x_length + margin)
     plt.ylim(-margin, y_length + margin)
 
+    plt.title('Heatmap with Shortest Path')
+    plt.xlabel('X Axis')
+    plt.ylabel('Y Axis')
     plt.savefig('heatmap2.png')
     plt.show()
     
-    
-    
-     
 
 if __name__ == "__main__":
     main()

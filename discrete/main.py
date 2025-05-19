@@ -1,4 +1,5 @@
 import sys
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.sparse import csr_matrix
@@ -153,6 +154,8 @@ def main():
     5. Plot
     """
     
+    time_start = time.time()
+    
     #### Step 1: Let's build the problem field
     if len(sys.argv) >= 4:
         x_length = int(sys.argv[1])
@@ -167,7 +170,7 @@ def main():
     else:
         x_length = 50        # x coordinate of the cows field [m]
         y_length = 100        # y coordinate of the cows field [m]
-        n_obst = 30          # number of obsticles (cows)
+        n_obst = 100          # number of obsticles (cows)
         
         np.random.seed(42)   # seed for the random number generator
         
@@ -183,7 +186,7 @@ def main():
     
     # define the starting and end points (as indices in the graph)    
     start_coord = int(np.random.random_sample()*x_length + 0.5)                         # 0
-    end_coord = grid_points.shape[0] - int(np.random.random_sample()*x_length + 0.5)    # -1
+    end_coord = grid_points.shape[0] - int(x_length/grid_spacing + 1) + int(np.random.random_sample()*x_length + 0.5)    # -1
     
     print(start_coord, end_coord)
     
@@ -203,6 +206,8 @@ def main():
     path.append(start_coord)
     path = path[::-1]  # Reverse the path to get it from source to destination
     
+    print("total runtime: ", time.time() - time_start, "[s]")
+    
     #### Step 5: Plot
     
     # Plot the shortest path
@@ -211,14 +216,17 @@ def main():
     plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
     
     # Plot the start and end points
-    plt.plot(grid_points[start_coord, 0], grid_points[start_coord, 1], marker='x', linestyle='-', color='green', markersize=8)
-    plt.plot(grid_points[end_coord, 0], grid_points[end_coord, 1], marker='x', linestyle='-', color='red', markersize=8)
+    #plt.plot(grid_points[start_coord, 0], grid_points[start_coord, 1], marker='x', linestyle='-', color='green', markersize=8)
+    #plt.plot(grid_points[end_coord, 0], grid_points[end_coord, 1], marker='x', linestyle='-', color='red', markersize=8)
 
     # Plot the heatmap
     weights = grid_points[:, 2].reshape((y_length+1, x_length+1))
     plt.imshow(weights, origin='lower', extent=(0, x_length, 0, y_length), cmap='hot', interpolation='nearest')
     plt.colorbar(label='Cost')
     
+    margin = max(x_length, y_length)/20.0
+    plt.xlim(-margin, x_length + margin)
+    plt.ylim(-margin, y_length + margin)
     
     plt.title('Heatmap with Shortest Path')
     plt.xlabel('X Axis')
