@@ -23,7 +23,7 @@ def cost_function(cow_coord: np.ndarray, rumo_coord: np.ndarray):
     
     return max(1 - np.linalg.norm(cow_coord - rumo_coord)/crit_dist, 0.1)
 
-def swap_nodes_csr(G, i, j):
+def swap_nodes(G, i, j):
     """Swap nodes i and j in the csr graph
 
     Args:
@@ -47,7 +47,7 @@ def swap_nodes_csr(G, i, j):
     
 
 
-def build_graph(obst_coord: np.ndarray, x_length: float = 1, y_length: float = 1, grid_spacing: float = 1):
+def compute_heatmap(obst_coord: np.ndarray, x_length: float = 1, y_length: float = 1, grid_spacing: float = 1):
     """This function computes the heatmap of the cows as a graph.
         The algorithm computes a head map of how close rumo is allowed to come.
         Graph is connected by the 8 neighbours.
@@ -87,8 +87,21 @@ def build_graph(obst_coord: np.ndarray, x_length: float = 1, y_length: float = 1
         
         # store the cost
         grid_point[2] = cost
+        
+    return grid_points, n_total_points, n_grid_points_x
 
+def compute_graph(grid_points: np.array, n_total_points: int, n_grid_points_x: int):
+    """AI is creating summary for compute_graph
 
+    Args:
+        grid_points (np.array): [description]
+        n_total_points (int): [description]
+        n_grid_points_x (int): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    
     # create the dense matrix for the graph (zero means no connection)
     graph = np.zeros((n_total_points, n_total_points))
     
@@ -139,7 +152,7 @@ def build_graph(obst_coord: np.ndarray, x_length: float = 1, y_length: float = 1
     # convert the graph into CSR format (for efficiency)
     graph = csr_matrix(graph)
 
-    return grid_points, graph
+    return graph
             
 
 def main():
@@ -156,23 +169,12 @@ def main():
     
     time_start = time.time()
     
-    #### Step 1: Let's build the problem field
-    if len(sys.argv) >= 4:
-        x_length = int(sys.argv[1])
-        y_length = int(sys.argv[2])
-        n_obst = int(sys.argv[3])
-        
-        if len(sys.argv) == 5:
-            np.random.seed(int(sys.argv[4]))
-        else:
-            raise Exception("Wrong number of arguments")
-        
-    else:
-        x_length = 50        # x coordinate of the cows field [m]
-        y_length = 100        # y coordinate of the cows field [m]
-        n_obst = 100          # number of obsticles (cows)
-        
-        np.random.seed(42)   # seed for the random number generator
+    ##### Step 1: Let's build the problem field
+    x_length = 50        # x coordinate of the cows field [m]
+    y_length = 100        # y coordinate of the cows field [m]
+    n_obst = 100          # number of obsticles (cows)
+    
+    np.random.seed(42)   # seed for the random number generator
         
     grid_spacing = 1        # spacing of the grid points [m]
     
@@ -181,19 +183,20 @@ def main():
     obst_coord[:,0] *= x_length
     obst_coord[:,1] *= y_length
 
-    #### Step 2 & 3: Let's build the heat map via a self-made voronoi approach as we need to store the weights of the points
-    grid_points, graph = build_graph(obst_coord, x_length, y_length, grid_spacing)
+    ##### Step 2: Computing the 2d heatmap of the cows in the field
+    grid_points, n_total_points, n_grid_points_x = compute_heatmap(obst_coord, x_length, y_length, grid_spacing)
     
-    # define the starting and end points (as indices in the graph)    
-    start_coord = int(np.random.random_sample()*x_length + 0.5)                         # 0
-    end_coord = grid_points.shape[0] - int(x_length/grid_spacing + 1) + int(np.random.random_sample()*x_length + 0.5)    # -1
+    ##### Step 3: Converting the heatmap into a weighted graph
+    graph = compute_graph(grid_points, n_total_points, n_grid_points_x)
     
-    print(start_coord, end_coord)
+    # Define the starting and end points (as indices in the graph)    
+    start_coord = int(np.random.random_sample()*x_length + 0.5)                                                         # 0
+    end_coord = grid_points.shape[0] - int(x_length/grid_spacing + 1) + int(np.random.random_sample()*x_length + 0.5)   # -1
     
-    # swap the end point with the current last one
-    swap_nodes_csr(graph, end_coord, -1)
+    # Swap the end point with the current last one
+    swap_nodes(graph, end_coord, -1)
     
-    #### Step 4: Compute the shortest path
+    ##### Step 4: Compute the shortest path
     dist_matrix, predecessors = shortest_path(csgraph=graph, method='auto', directed=False, indices=start_coord, return_predecessors=True)
     
     # Backtrack to find the shortest path from source to destination
@@ -208,7 +211,7 @@ def main():
     
     print("total runtime: ", time.time() - time_start, "[s]")
     
-    #### Step 5: Plot
+    ##### Step 5: Plot
     
     # Plot the shortest path
     x_coords = grid_points[path, 0]

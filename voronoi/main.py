@@ -50,7 +50,7 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     return cost, t
     
 def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: float, y_length: float, start_coord: float, end_coord: float):
-    """AI is creating summary for compute_graph
+    """Computing the weighted graph from the voronoi points
 
     Args:
         vor (Voronoi): [description]
