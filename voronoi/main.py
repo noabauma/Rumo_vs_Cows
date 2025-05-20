@@ -50,7 +50,7 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     return cost, t
     
 def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: float, y_length: float, start_coord: float, end_coord: float):
-    """Computing the weighted graph from the voronoi points
+    """Computing the weighted graph from the voronoi diagram
 
     Args:
         vor (Voronoi): [description]
@@ -142,7 +142,7 @@ def main():
     It consists of:
     
     1. Defining the problem field (#cows, dimensions, start/end point, ...)
-    2. Computing the Voronoi map
+    2. Computing the Voronoi diagram
     3. Computing the cost of the edges and store it as a weighted graph
     4. Computing the shortest path
     5. Plot
@@ -194,13 +194,16 @@ def main():
     end_coord = np.random.random_sample()*x_length
 
     
-    ##### Step 2: Computing the Voronoi map
+    ##### Step 2: Computing the Voronoi diagram
+    # O(nlogn)
     vor = Voronoi(obst_coord, furthest_site=False)
     
     ##### Step 3: building the weighted graph
+    # O(n)
     graph, all_idx = compute_graph(vor, obst_coord, n_obst, x_length, y_length, start_coord, end_coord)
     
     ##### Step 4: Compute the shortest path
+    # O[n*(n*k + n*log(n))] with k in [3,6]
     dist_matrix, predecessors = shortest_path(csgraph=graph, method='auto', directed=False, indices=0, return_predecessors=True)
     
     # Backtrack to find the shortest path from source to destination
@@ -213,6 +216,8 @@ def main():
     path.append(0)
     path = path[::-1]  # Reverse the path to get it from source to destination
     
+    # total runtime complexity
+    # 
     print("total runtime: ", time.time() - time_start, "[s]")
     
     ##### Step 5: Plot
