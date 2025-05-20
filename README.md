@@ -1,10 +1,9 @@
 # Rumo_vs_Cows
 This is a little project of mine to solve the problem of finding the shortest path from A to B with the least risk of intervention.
 
-| Image 1 | Image 2 |
+| Discrete solution | Voronoi solution |
 |--------|---------|
 | ![Image1](figures/discrete.PNG) | ![Image2](figures/voronoi.PNG) |
-| Discrete solution | Voronoi solution |
 
 There are two different algorithms:
 
