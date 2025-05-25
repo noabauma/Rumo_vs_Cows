@@ -1,9 +1,9 @@
 import time
 import numpy as np
+from collections import defaultdict, deque
 import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import shortest_path
 
 """
 This code computes the problem of Rumo having to pass a field with n cows.
@@ -13,6 +13,28 @@ I.e. we are searching for the path of least resistance.
 
 np.random.seed(42)
 
+class UnionFind:
+    def __init__(self, size):
+        self.parent = list(range(size))
+        self.rank = [0] * size
+
+    def find(self, x):
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x, y):
+        xr, yr = self.find(x), self.find(y)
+        if xr == yr:
+            return False
+        if self.rank[xr] < self.rank[yr]:
+            self.parent[xr] = yr
+        elif self.rank[xr] > self.rank[yr]:
+            self.parent[yr] = xr
+        else:
+            self.parent[yr] = xr
+            self.rank[xr] += 1
+        return True
 
 def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     """Cost function to determine the cost of crossing this edge
@@ -26,7 +48,6 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     Returns:
         cost (float): The cost of crossing this edge
     """
-    crit_dist = 5    # critical distance between cows [m] closer than this will lead to rumo barking
     
     m = (c1 + c2)/2 # middle_point
     
@@ -38,16 +59,11 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     t = np.dot(b - a, m - a)/np.dot(b - a, b - a)
     
     if 0 <= t <= 1:
-        cost = max(1 - np.linalg.norm(c1 - m)/crit_dist, 0.1)
-        #cost = max(1/np.dot(c1 - m, c1 - m), 0.1)
+        return np.linalg.norm(c1 - m), t
     elif t < 0:
-        cost = max(1 - np.linalg.norm(c1 - a)/crit_dist, 0.1)
-        #cost = max(1/np.dot(c1 - a, c1 - a), 0.1)
+        return np.linalg.norm(c1 - a), t
     else:
-        cost = max(1 - np.linalg.norm(c1 - b)/crit_dist, 0.1)
-        #cost = max(1/np.dot(c1 - b, c1 - b), 0.1)
-    
-    return cost, t
+        return np.linalg.norm(c1 - b), t
     
 def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: float, y_length: float, start_coord: float, end_coord: float):
     """Computing the weighted graph from the voronoi diagram
@@ -88,7 +104,10 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
             
     middle_points = np.array(middle_points)
     
-    #print(middle_points)
+    # Sort by column index 1 (second column)
+    middle_points = middle_points[np.argsort(middle_points[:, 2])[::-1]]
+    
+    print(middle_points)
     
     # Next step: store everything into a weightes CSR graph file
     
@@ -125,16 +144,53 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     all_idx[0], all_idx[start_idx] = all_idx[start_idx], all_idx[0]
     all_idx[-1], all_idx[end_idx] = all_idx[end_idx], all_idx[-1]
     
-    n_nodes = len(all_idx)
-    graph = np.zeros((n_nodes, n_nodes))
-    for middle_point in middle_points:
-        i = np.where(all_idx == middle_point[0])[0][0]
-        j = np.where(all_idx == middle_point[1])[0][0]
-        cost = middle_point[2]
-        graph[i,j] = cost
+    return middle_points, all_idx
+
+
+def union_find_optimal_path(middle_points: np.array, all_idx: np.array):
+    """AI is creating summary for union_find_optimal_path
+
+    Args:
+        middle_points (np.array): [description]
+        all_idx (np.array): [description]
+    """
+    n = len(all_idx)
+    uf = UnionFind(n)
+    graph = defaultdict(list)
+
+    edge_idx = 0
+    while uf.find(0) != uf.find(n - 1) or edge_idx < n:
+        
+        i = int(middle_points[edge_idx, 0])
+        j = int(middle_points[edge_idx, 1])
+        
+        i = np.where(all_idx == i)[0][0]    # TODO: this is expensive to always check and costs O(n), do transform the nodes first and retransform back
+        j = np.where(all_idx == j)[0][0]
+        
+        if uf.union(i, j):
+            graph[i].append(j)
+            graph[j].append(i)
+
+        edge_idx += 1
+
+    assert edge_idx != n, "We did not find a path! (Impossible?!)"
     
-    return csr_matrix(graph), all_idx
-            
+    # Building the path from Union Find
+    visited = set()
+    queue = deque([(0, [0])])
+
+    while queue:
+        node, path = queue.popleft()
+        if node == n-1:
+            break
+        visited.add(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                queue.append((neighbor, path + [neighbor]))
+    
+    return path
+    
+    
 
 def main():
     """
@@ -152,7 +208,7 @@ def main():
     
     ##### Step 1: Defining the problem field
     
-    x_length = 50        # x coordinate of the cows field [m]
+    x_length = 100        # x coordinate of the cows field [m]
     y_length = 100        # y coordinate of the cows field [m]
     n_obst = 100          # number of obsticles (cows)
     
@@ -202,22 +258,11 @@ def main():
     # O(n)
     graph, all_idx = compute_graph(vor, obst_coord, n_obst, x_length, y_length, start_coord, end_coord)
     
-    ##### Step 4: Compute the shortest path
-    # O[n*k + n*log(n)] with k in [3,6] -> O(n*log(n))
-    dist_matrix, predecessors = shortest_path(csgraph=graph, method='auto', directed=False, indices=0, return_predecessors=True)
-    
-    # Backtrack to find the shortest path from source to destination
-    path = []
-    step = -1
-    while step != 0:
-        path.append(step)
-        step = predecessors[step]
-
-    path.append(0)
-    path = path[::-1]  # Reverse the path to get it from source to destination
+    ##### Step 4: Union-Find optimal path
+    path = union_find_optimal_path(graph, all_idx)
     
     # total runtime complexity
-    # O[n*log(n) + n + n*k + n*log(n)]
+    # 
     print("total runtime: ", time.time() - time_start, "[s]")
     
     ##### Step 5: Plot
