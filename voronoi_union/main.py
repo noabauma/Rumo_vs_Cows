@@ -13,6 +13,14 @@ I.e. we are searching for the path of least resistance.
 
 np.random.seed(42)
 
+# Turn on interactive mode
+#plt.ion()
+plt.switch_backend('Agg')  # Offscreen rendering
+
+# Create a figure and axis once
+fig, ax = plt.subplots()
+
+
 class UnionFind:
     def __init__(self, size):
         self.parent = list(range(size))
@@ -24,6 +32,7 @@ class UnionFind:
         return self.parent[x]
 
     def union(self, x, y):
+        """
         xr, yr = self.find(x), self.find(y)
         if xr == yr:
             return False
@@ -46,7 +55,6 @@ class UnionFind:
         # Make the representative of i's set
         # be the representative of j's set
         self.parent[xrep] = yrep
-        """
 
 def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     """Cost function to determine the cost of crossing this edge
@@ -157,7 +165,7 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     return middle_points, all_idx
 
 
-def union_find_optimal_path(middle_points: np.array, all_idx: np.array):
+def union_find_optimal_path(vor: Voronoi, middle_points: np.array, all_idx: np.array):
     """AI is creating summary for union_find_optimal_path
 
     Args:
@@ -178,6 +186,17 @@ def union_find_optimal_path(middle_points: np.array, all_idx: np.array):
         i = int(middle_points[edge_idx, 0])
         j = int(middle_points[edge_idx, 1])
         
+        x_coords = [vor.vertices[i, 0], vor.vertices[j, 0]]
+        y_coords = [vor.vertices[i, 1], vor.vertices[j, 1]]
+        ax.plot(x_coords, y_coords, marker='o', linestyle='-', color='red', markersize=8)
+        #plt.draw()     # Redraw the current figure
+        #plt.pause(0.1) # Pause to allow the plot to update (simulate "step-by-step")
+        #time.sleep(0.05)
+        
+        fig.savefig(f"frame_{edge_idx:03d}.png")
+        
+        print(edge_idx, flush=True)
+        
         i = np.where(all_idx == i)[0][0]    # TODO: this is expensive to always check and costs O(n), do transform the nodes first and retransform back
         j = np.where(all_idx == j)[0][0]
         
@@ -185,10 +204,10 @@ def union_find_optimal_path(middle_points: np.array, all_idx: np.array):
             
         graph[i].append(j)
         graph[j].append(i)
+        
 
         edge_idx += 1
         
-    print(edge_idx, n_edges)
 
     assert edge_idx != n_edges, f"We did not find a path! (Impossible?!) {edge_idx} == {n_edges}"
     
@@ -265,7 +284,17 @@ def main():
     # define the starting and end points (as random coordinates on the top and bottom boundary)
     start_coord = np.random.random_sample()*x_length
     end_coord = np.random.random_sample()*x_length
-
+    
+    # Draw the square bounding box
+    plt.plot([0, x_length, x_length, 0, 0],
+            [0, 0, y_length, y_length, 0],
+            'k--', lw=2)
+    
+    margin = max(x_length, y_length)/20.0
+    plt.xlim(-margin, x_length + margin)
+    plt.ylim(-margin, y_length + margin)
+    
+    plt.scatter(og_obst_coord[:,0], og_obst_coord[:,1], c='pink', s=50)
     
     ##### Step 2: Computing the Voronoi diagram
     # O(nlogn)
@@ -275,8 +304,11 @@ def main():
     # O(n)
     graph, all_idx = compute_graph(vor, obst_coord, n_obst, x_length, y_length, start_coord, end_coord)
     
+    plt.plot(vor.vertices[all_idx[0], 0], vor.vertices[all_idx[0], 1], marker='x', linestyle='-', color='green', markersize=8)
+    plt.plot(vor.vertices[all_idx[-1], 0], vor.vertices[all_idx[-1], 1], marker='x', linestyle='-', color='red', markersize=8)
+    
     ##### Step 4: Union-Find optimal path
-    path = union_find_optimal_path(graph, all_idx)
+    path = union_find_optimal_path(vor, graph, all_idx)
     
     # total runtime complexity
     # 
@@ -294,17 +326,6 @@ def main():
     
     #colors = ['green' if (0.0 < t < 1.0) else 'red' for t in middle_points[:,3]]
     #plt.scatter(middle_points[:,4], middle_points[:,5], c=colors, s=50, edgecolors='black')
-    
-    plt.scatter(og_obst_coord[:,0], og_obst_coord[:,1], c='pink', s=50)
-
-    # Draw the square bounding box
-    plt.plot([0, x_length, x_length, 0, 0],
-            [0, 0, y_length, y_length, 0],
-            'k--', lw=2)
-    
-    margin = max(x_length, y_length)/20.0
-    plt.xlim(-margin, x_length + margin)
-    plt.ylim(-margin, y_length + margin)
 
     plt.xlabel('X Axis')
     plt.ylabel('Y Axis')
