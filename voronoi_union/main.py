@@ -35,6 +35,18 @@ class UnionFind:
             self.parent[yr] = xr
             self.rank[xr] += 1
         return True
+    
+        """
+        # Representative of set containing i
+        xrep = self.find(x)
+        
+        # Representative of set containing j
+        yrep = self.find(y)
+        
+        # Make the representative of i's set
+        # be the representative of j's set
+        self.parent[xrep] = yrep
+        """
 
 def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     """Cost function to determine the cost of crossing this edge
@@ -104,10 +116,8 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
             
     middle_points = np.array(middle_points)
     
-    # Sort by column index 1 (second column)
+    # Sort by column by best graph (i.e. highest score)
     middle_points = middle_points[np.argsort(middle_points[:, 2])[::-1]]
-    
-    print(middle_points)
     
     # Next step: store everything into a weightes CSR graph file
     
@@ -154,12 +164,16 @@ def union_find_optimal_path(middle_points: np.array, all_idx: np.array):
         middle_points (np.array): [description]
         all_idx (np.array): [description]
     """
-    n = len(all_idx)
-    uf = UnionFind(n)
+    n_nodes = len(all_idx)
+    uf = UnionFind(n_nodes)
     graph = defaultdict(list)
+    
+    print(middle_points[:,0:3])
+    print(all_idx)
 
+    n_edges = middle_points.shape[0]
     edge_idx = 0
-    while uf.find(0) != uf.find(n - 1) or edge_idx < n:
+    while uf.find(0) != uf.find(n_nodes - 1) or edge_idx < n_edges:
         
         i = int(middle_points[edge_idx, 0])
         j = int(middle_points[edge_idx, 1])
@@ -167,21 +181,24 @@ def union_find_optimal_path(middle_points: np.array, all_idx: np.array):
         i = np.where(all_idx == i)[0][0]    # TODO: this is expensive to always check and costs O(n), do transform the nodes first and retransform back
         j = np.where(all_idx == j)[0][0]
         
-        if uf.union(i, j):
-            graph[i].append(j)
-            graph[j].append(i)
+        uf.union(i, j)
+            
+        graph[i].append(j)
+        graph[j].append(i)
 
         edge_idx += 1
+        
+    print(edge_idx, n_edges)
 
-    assert edge_idx != n, "We did not find a path! (Impossible?!)"
+    assert edge_idx != n_edges, f"We did not find a path! (Impossible?!) {edge_idx} == {n_edges}"
     
-    # Building the path from Union Find
+    # Building the path from Union Find (BFS)
     visited = set()
     queue = deque([(0, [0])])
 
     while queue:
         node, path = queue.popleft()
-        if node == n-1:
+        if node == n_nodes-1:
             break
         visited.add(node)
         for neighbor in graph[node]:
@@ -208,9 +225,9 @@ def main():
     
     ##### Step 1: Defining the problem field
     
-    x_length = 100        # x coordinate of the cows field [m]
-    y_length = 100        # y coordinate of the cows field [m]
-    n_obst = 100          # number of obsticles (cows)
+    x_length = 10        # x coordinate of the cows field [m]
+    y_length = 10        # y coordinate of the cows field [m]
+    n_obst = 9          # number of obsticles (cows)
     
     obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
     obst_coord[:,0] *= x_length
@@ -289,7 +306,6 @@ def main():
     plt.xlim(-margin, x_length + margin)
     plt.ylim(-margin, y_length + margin)
 
-    plt.title('Heatmap with Shortest Path')
     plt.xlabel('X Axis')
     plt.ylabel('Y Axis')
     plt.savefig('heatmap2.png')
