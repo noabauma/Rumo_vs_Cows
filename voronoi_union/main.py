@@ -14,8 +14,8 @@ I.e. we are searching for the path of least resistance.
 np.random.seed(42)
 
 # Turn on interactive mode
-#plt.ion()
-plt.switch_backend('Agg')  # Offscreen rendering
+# plt.ion()
+# plt.switch_backend('Agg')  # Offscreen rendering
 
 # Create a figure and axis once
 fig, ax = plt.subplots()
@@ -24,25 +24,23 @@ fig, ax = plt.subplots()
 class UnionFind:
     def __init__(self, size):
         self.parent = list(range(size))
-        self.rank = [0] * size
 
-    def find(self, x):
-        if self.parent[x] != x:
-            self.parent[x] = self.find(self.parent[x])
-        return self.parent[x]
+    def find(self, i):
+        # If i itself is root or representative
+        if self.parent[i] == i:
+            return i
+          
+        # Else recursively find the representative 
+        # of the parent
+        return self.find(self.parent[i])
 
-    def union(self, x, y):
-        """
-        xr, yr = self.find(x), self.find(y)
-        if xr == yr:
+    def union(self, i, j):
+        ir, jr = self.find(i), self.find(j)
+        if ir == jr:
             return False
-        if self.rank[xr] < self.rank[yr]:
-            self.parent[xr] = yr
-        elif self.rank[xr] > self.rank[yr]:
-            self.parent[yr] = xr
-        else:
-            self.parent[yr] = xr
-            self.rank[xr] += 1
+        
+        self.parent[ir] = jr
+
         return True
     
         """
@@ -55,6 +53,7 @@ class UnionFind:
         # Make the representative of i's set
         # be the representative of j's set
         self.parent[xrep] = yrep
+        """
 
 def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     """Cost function to determine the cost of crossing this edge
@@ -127,8 +126,6 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     # Sort by column by best graph (i.e. highest score)
     middle_points = middle_points[np.argsort(middle_points[:, 2])[::-1]]
     
-    # Next step: store everything into a weightes CSR graph file
-    
     # First, make a mapping of the vor.vertices to arange as CSR starts from 0, n_points -1.
     all_idx = np.unique(middle_points[:,0:2]).astype(int)
     
@@ -176,26 +173,23 @@ def union_find_optimal_path(vor: Voronoi, middle_points: np.array, all_idx: np.a
     uf = UnionFind(n_nodes)
     graph = defaultdict(list)
     
-    print(middle_points[:,0:3])
-    print(all_idx)
+    # print(middle_points[:,0:3])
+    # print(all_idx)
 
     n_edges = middle_points.shape[0]
     edge_idx = 0
-    while uf.find(0) != uf.find(n_nodes - 1) or edge_idx < n_edges:
+    while uf.find(0) != uf.find(n_nodes - 1):
         
         i = int(middle_points[edge_idx, 0])
         j = int(middle_points[edge_idx, 1])
         
-        x_coords = [vor.vertices[i, 0], vor.vertices[j, 0]]
-        y_coords = [vor.vertices[i, 1], vor.vertices[j, 1]]
-        ax.plot(x_coords, y_coords, marker='o', linestyle='-', color='red', markersize=8)
-        #plt.draw()     # Redraw the current figure
-        #plt.pause(0.1) # Pause to allow the plot to update (simulate "step-by-step")
-        #time.sleep(0.05)
-        
-        fig.savefig(f"frame_{edge_idx:03d}.png")
-        
-        print(edge_idx, flush=True)
+        # x_coords = [vor.vertices[i, 0], vor.vertices[j, 0]]
+        # y_coords = [vor.vertices[i, 1], vor.vertices[j, 1]]
+        # ax.plot(x_coords, y_coords, marker='o', linestyle='-', color='red', markersize=8)
+        # plt.draw()     # Redraw the current figure
+        # plt.pause(0.1) # Pause to allow the plot to update (simulate "step-by-step")
+        # time.sleep(0.05)
+        # fig.savefig(f"frame_{edge_idx:03d}.png")
         
         i = np.where(all_idx == i)[0][0]    # TODO: this is expensive to always check and costs O(n), do transform the nodes first and retransform back
         j = np.where(all_idx == j)[0][0]
@@ -204,12 +198,11 @@ def union_find_optimal_path(vor: Voronoi, middle_points: np.array, all_idx: np.a
             
         graph[i].append(j)
         graph[j].append(i)
-        
 
         edge_idx += 1
         
-
-    assert edge_idx != n_edges, f"We did not find a path! (Impossible?!) {edge_idx} == {n_edges}"
+        assert edge_idx != n_edges, f"We did not find a path! (Impossible?!) {edge_idx} == {n_edges}"
+    
     
     # Building the path from Union Find (BFS)
     visited = set()
@@ -244,9 +237,9 @@ def main():
     
     ##### Step 1: Defining the problem field
     
-    x_length = 10        # x coordinate of the cows field [m]
-    y_length = 10        # y coordinate of the cows field [m]
-    n_obst = 9          # number of obsticles (cows)
+    x_length = 50        # x coordinate of the cows field [m]
+    y_length = 100        # y coordinate of the cows field [m]
+    n_obst = 100          # number of obsticles (cows)
     
     obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
     obst_coord[:,0] *= x_length
