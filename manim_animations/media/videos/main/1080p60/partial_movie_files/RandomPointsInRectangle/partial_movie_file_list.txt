@@ -1,0 +1,4 @@
+# This file is used internally by FFMPEG.
+file 'file:/mnt/c/src/Rumo_vs_Cows/manim_animations/media/videos/main/1080p60/partial_movie_files/RandomPointsInRectangle/3977891868_1420980838_143032662.mp4'
+file 'file:/mnt/c/src/Rumo_vs_Cows/manim_animations/media/videos/main/1080p60/partial_movie_files/RandomPointsInRectangle/2852726489_425074362_1207031964.mp4'
+file 'file:/mnt/c/src/Rumo_vs_Cows/manim_animations/media/videos/main/1080p60/partial_movie_files/RandomPointsInRectangle/2852726489_667144672_614530924.mp4'
