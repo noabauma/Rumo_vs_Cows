@@ -1,8 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:/mnt/c/src/Rumo_vs_Cows/manim_animations/media/videos/main/1080p60/partial_movie_files/RandomPointsInRectangle/1923676258_3345894098_877267901.mp4'
-file 'file:/mnt/c/src/Rumo_vs_Cows/manim_animations/media/videos/main/1080p60/partial_movie_files/RandomPointsInRectangle/2284674212_3878965766_877267901.mp4'
-file 'file:/mnt/c/src/Rumo_vs_Cows/manim_animations/media/videos/main/1080p60/partial_movie_files/RandomPointsInRectangle/2284674212_1626177013_3208194589.mp4'
-file 'file:/mnt/c/src/Rumo_vs_Cows/manim_animations/media/videos/main/1080p60/partial_movie_files/RandomPointsInRectangle/2284674212_1001480576_3686838850.mp4'
-file 'file:/mnt/c/src/Rumo_vs_Cows/manim_animations/media/videos/main/1080p60/partial_movie_files/RandomPointsInRectangle/2284674212_3515533520_599515311.mp4'
-file 'file:/mnt/c/src/Rumo_vs_Cows/manim_animations/media/videos/main/1080p60/partial_movie_files/RandomPointsInRectangle/198561684_25366812_3749245963.mp4'
-file 'file:/mnt/c/src/Rumo_vs_Cows/manim_animations/media/videos/main/1080p60/partial_movie_files/RandomPointsInRectangle/366413502_3515533520_2871768193.mp4'
