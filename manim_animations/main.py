@@ -1,3 +1,11 @@
+import sys
+import os
+
+# Add the parent directory of 'foo' to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'discrete')))
+
+from main import * # all the functions of discrete/main.py
+
 from manim import *
 import numpy as np
 
@@ -12,7 +20,7 @@ class RandomPointsInRectangle(MovingCameraScene):
        
 
         # Set camera frame size to fit the rectangle (with margin)
-        margin = max(x_length, y_length)/10  # optional margin
+        margin = max(x_length, y_length)/10
         desired_width = x_length + margin
         desired_height = y_length + margin
         
@@ -24,10 +32,10 @@ class RandomPointsInRectangle(MovingCameraScene):
         #self.add(rect)
         
         # Animation of the camera
-        self.play(self.camera.frame.animate.set(width=desired_width, height=desired_height))
-        self.wait()
-        self.play(self.camera.frame.animate.move_to(rect))
-        self.wait()
+        self.play(self.camera.frame.animate.move_to(rect).set(width=desired_width, height=desired_height))
+        
+        #self.play(self.camera.frame.animate.set(width=desired_width, height=desired_height))
+        #self.play(self.camera.frame.animate.move_to(rect))
         
         # Save the state of camera
         self.camera.frame.save_state()
@@ -48,6 +56,8 @@ class RandomPointsInRectangle(MovingCameraScene):
             for x, y in obst_coord
         ])
         
+        points.set_z_index(1)
+        
         n_grid_points_x = int(x_length/grid_spacing + 1)    # number of grid points in the x-dimension
         n_grid_points_y = int(y_length/grid_spacing + 1)    # number of grid points in the y-dimension
         n_total_points = n_grid_points_x*n_grid_points_y
@@ -63,13 +73,20 @@ class RandomPointsInRectangle(MovingCameraScene):
         grid_points = np.vstack([x.ravel(), y.ravel()]).T
         
         grid_points = VGroup(*[
-            Dot(point=[x, y, 0], radius=0.1, color=RED)
+            Dot(point=[x, y, 0], radius=0.2, color=RED)
             for x, y in grid_points
         ])
+        
+        grid_points.set_z_index(0)
 
         # Animate
         self.play(Create(rect))
         self.play(LaggedStartMap(FadeIn, points, lag_ratio=0.05))
         self.play(Create(grid_points))
+        self.wait()
+        
+        # Let's move the camera to a corner
+        margin = max(x_length, y_length)/100  # optional margin
+        self.play(self.camera.frame.animate.move_to([x_length/20, y_length*(19/20), 0]).set(width=x_length/10 + margin , height=y_length/10 + margin ))
         self.wait()
 
