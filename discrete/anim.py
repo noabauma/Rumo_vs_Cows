@@ -63,7 +63,7 @@ class Discrete(MovingCameraScene):
 
         # Create Dot mobjects from the array
         points = VGroup(*[
-            Dot(point=[x, y, 0], radius=0.5, color=LIGHT_BROWN)
+            Dot(point=[x, y, 0], radius=0.5, color=RED)
             for x, y in obst_coord
         ])
         
@@ -71,21 +71,13 @@ class Discrete(MovingCameraScene):
         points.set_z_index(1)
         
         grid_points_ = VGroup(*[
-            Dot(point=[x, y, 0], radius=0.2, color=RED)
+            Dot(point=[x, y, 0], radius=0.1, color=interpolate_color(BLUE, RED, alpha=z))
             for x, y, z in grid_points
         ])
         
         grid_points_.set_z_index(0)
         
-        # Labels for z-values (heatmap values)
-        labels = VGroup(*[
-            DecimalNumber(z, num_decimal_places=2, color=WHITE)
-            .scale(0.4)
-            .next_to([x, y, 0], UP, buff=0.1)
-            for x, y, z in grid_points
-        ])
         
-        labels.set_z_index(1)
 
         # Animate
         self.play(Create(rect))
@@ -95,7 +87,65 @@ class Discrete(MovingCameraScene):
         
         # Let's move the camera to a corner
         margin = max(x_length, y_length)/100  # optional margin
-        self.play(self.camera.frame.animate.move_to([x_length/20, y_length*(19/20), 0]).set(width=x_length/10 + margin , height=y_length/10 + margin ))
+        camera_x = x_length/20
+        camera_y = y_length*(19/20)
+        view_width = (x_length/10 + margin)*(16/9)
+        view_height = y_length/10 + margin
+        self.play(self.camera.frame.animate.move_to([camera_x, camera_y, 0]).set(width=view_width, height=view_height))
         self.wait()
+        
+        # Save the state of camera
+        self.camera.frame.save_state()
+        
+        # TODO: animate the cost function here before adding the points
+        ax = Axes(
+            x_range=[0, 20, 1],       # [min, max, step] → tick marks every 1 unit
+            y_range=[0, 1, 0.2],      # ticks every 0.2 on y-axis
+            x_length=9,
+            y_length=3,
+            axis_config={
+                "color": WHITE,
+                "include_ticks": True,
+                "include_numbers": True,
+                "decimal_number_config": {"num_decimal_places": 1},
+            },
+            x_axis_config={
+                "numbers_to_include": [0, 5, 10, 15, 20],  # customize labels if you want
+            },
+            y_axis_config={
+                "numbers_to_include": [0, 0.2, 0.4, 0.6, 0.8, 1.0],
+            }
+        )
+
+        # Move to (-7, 4) for example
+        ax.move_to([-10, 4, 0])
+
+        # Plot your graph
+        graph = ax.plot(lambda x: max(cost_function([0], x), cost_function([5], x)), color=WHITE)
+        
+        graph_labels = ax.get_axis_labels(x_label="distance to a cow [m]", y_label="cost")
+        
+        self.add(ax, graph, graph_labels)
+        
+        # Zoom in slightly and move to the graph
+        self.play(
+            self.camera.frame.animate.set(width=12).move_to(ax.get_center()),
+            run_time=2
+        )
+        self.wait()
+        self.play(Restore(self.camera.frame))
+        self.wait()
+        
+        # Labels for z-values (heatmap values)
+        labels = VGroup(*[
+            DecimalNumber(z, num_decimal_places=2, color=WHITE)
+            .scale(0.4)
+            .next_to([x, y, 0], UP, buff=0.1)
+            for x, y, z in grid_points if abs(x - camera_x) < view_width/2 and abs(y - camera_y) < view_height/2
+        ])
+        
+        labels.set_z_index(1)
+        
         self.play(Create(labels))
+        self.wait()
 
