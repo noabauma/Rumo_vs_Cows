@@ -10,8 +10,8 @@ class Discrete(MovingCameraScene):
         time_start = time.time()
     
         ##### Step 1: Let's build the problem field
-        x_length = 50        # x coordinate of the cows field [m]
-        y_length = 50        # y coordinate of the cows field [m]
+        x_length = 40        # x coordinate of the cows field [m]
+        y_length = 25        # y coordinate of the cows field [m]
         n_obst = 10          # number of obsticles (cows)
         
         np.random.seed(42)   # seed for the random number generator
@@ -63,7 +63,7 @@ class Discrete(MovingCameraScene):
 
         # Create Dot mobjects from the array
         points = VGroup(*[
-            Dot(point=[x, y, 0], radius=0.5, color=RED)
+            Dot(point=[x, y, 0], radius=0.5, color=RED_A)
             for x, y in obst_coord
         ])
         
@@ -71,13 +71,11 @@ class Discrete(MovingCameraScene):
         points.set_z_index(1)
         
         grid_points_ = VGroup(*[
-            Dot(point=[x, y, 0], radius=0.1, color=interpolate_color(BLUE, RED, alpha=z))
+            Dot(point=[x, y, 0], radius=0.2, color=interpolate_color(BLUE, RED, alpha=z))
             for x, y, z in grid_points
         ])
         
         grid_points_.set_z_index(0)
-        
-        
 
         # Animate
         self.play(Create(rect))
@@ -97,10 +95,10 @@ class Discrete(MovingCameraScene):
         # Save the state of camera
         self.camera.frame.save_state()
         
-        # TODO: animate the cost function here before adding the points
+        # Animate the cost function here before adding the points
         ax = Axes(
-            x_range=[0, 20, 1],       # [min, max, step] → tick marks every 1 unit
-            y_range=[0, 1, 0.2],      # ticks every 0.2 on y-axis
+            x_range=[0, 20, 2],       # [min, max, step] → tick marks every 1 unit
+            y_range=[0, 1, 0.1],      # ticks every 0.2 on y-axis
             x_length=9,
             y_length=3,
             axis_config={
@@ -110,10 +108,10 @@ class Discrete(MovingCameraScene):
                 "decimal_number_config": {"num_decimal_places": 1},
             },
             x_axis_config={
-                "numbers_to_include": [0, 5, 10, 15, 20],  # customize labels if you want
+                "numbers_to_include": [0, 10, 20],  # customize labels if you want
             },
             y_axis_config={
-                "numbers_to_include": [0, 0.2, 0.4, 0.6, 0.8, 1.0],
+                "numbers_to_include": [0, 0.1, 1.0],
             }
         )
 
@@ -121,11 +119,11 @@ class Discrete(MovingCameraScene):
         ax.move_to([-10, 4, 0])
 
         # Plot your graph
-        graph = ax.plot(lambda x: max(cost_function([0], x), cost_function([5], x)), color=WHITE)
+        graph1 = ax.plot(lambda x: cost_function([0], x), color=WHITE)
         
-        graph_labels = ax.get_axis_labels(x_label="distance to a cow [m]", y_label="cost")
+        graph_labels = ax.get_axis_labels(x_label="distance [m]", y_label="cost")
         
-        self.add(ax, graph, graph_labels)
+        self.add(ax, graph1, graph_labels)
         
         # Zoom in slightly and move to the graph
         self.play(
@@ -133,6 +131,16 @@ class Discrete(MovingCameraScene):
             run_time=2
         )
         self.wait()
+        
+        # Plot your graph
+        graph2 = ax.plot(lambda x: np.exp(-x), color=BLUE)
+        
+        
+        #self.add(graph2)
+        self.play(Create(graph2), run_time=3)
+        self.wait()
+        
+        
         self.play(Restore(self.camera.frame))
         self.wait()
         
@@ -140,12 +148,59 @@ class Discrete(MovingCameraScene):
         labels = VGroup(*[
             DecimalNumber(z, num_decimal_places=2, color=WHITE)
             .scale(0.4)
-            .next_to([x, y, 0], UP, buff=0.1)
-            for x, y, z in grid_points if abs(x - camera_x) < view_width/2 and abs(y - camera_y) < view_height/2
+            .next_to([x, y, 0], 2*UP, buff=0.1)
+            for x, y, z in grid_points if abs(x - camera_x) <= view_width/2 and abs(y - camera_y) <= view_height/2
         ])
         
-        labels.set_z_index(1)
+        labels.set_z_index(0)
         
         self.play(Create(labels))
         self.wait()
+        
+        # Now adding the edges (with labels)
+        lines = VGroup()
+        line_labels = VGroup()
+        coo = graph.tocoo()
+
+        for i, j, weight in zip(coo.row, coo.col, coo.data):
+            if i < j:
+                start = grid_points[i]
+                end = grid_points[j]
+
+                line = Line(
+                    [start[0], start[1], 0],
+                    [end[0], end[1], 0],
+                    stroke_width=2, # 1 + 3 * weight,
+                    color=BLUE # interpolate_color(BLUE, RED, weight)
+                )
+                lines.add(line)
+                
+                        # Label
+                label = DecimalNumber(
+                    weight,
+                    num_decimal_places=2,
+                    font_size=24
+                ).move_to(line.get_center())
+
+                # Optional: rotate label to match line direction
+                angle = line.get_angle()
+                label.rotate(angle)
+
+                line_labels.add(label)
+                
+        lines.set_z_index(-1)
+        line_labels.set_z_index(-1)
+
+        self.play(LaggedStartMap(Create, lines, lag_ratio=0.01), run_time=5)
+        self.wait()
+        
+        # TODO: Draw the labels of the lines
+        
+        # TODO: Draw the starting and end point
+        
+        # TODO: Draw the shortest path
+        
+        # TODO: Show it in the 3d view
+        
+        # TODO: Compute the complexity
 
