@@ -84,7 +84,7 @@ class Discrete(MovingCameraScene):
         self.wait()
         
         # Let's move the camera to a corner
-        margin = max(x_length, y_length)/100  # optional margin
+        margin = max(x_length, y_length)/55  # optional margin
         camera_x = x_length/20
         camera_y = y_length*(19/20)
         view_width = (x_length/10 + margin)*(16/9)
@@ -132,13 +132,17 @@ class Discrete(MovingCameraScene):
         )
         self.wait()
         
-        # Plot your graph
-        graph2 = ax.plot(lambda x: np.exp(-x), color=BLUE)
+        # Plot my graphs
+        graph2 = ax.plot(lambda x: np.exp(-x/10.0), color=BLUE)
         
         
         #self.add(graph2)
         self.play(Create(graph2), run_time=3)
         self.wait()
+        
+        
+        # TODO: Show the mathematical formula of the nodes
+        
         
         
         self.play(Restore(self.camera.frame))
@@ -149,7 +153,7 @@ class Discrete(MovingCameraScene):
             DecimalNumber(z, num_decimal_places=2, color=WHITE)
             .scale(0.4)
             .next_to([x, y, 0], 2*UP, buff=0.1)
-            for x, y, z in grid_points if abs(x - camera_x) <= view_width/2 and abs(y - camera_y) <= view_height/2
+            for x, y, z in grid_points if abs(x - camera_x) < view_width/2 and abs(y - camera_y) < view_height/1.5
         ])
         
         labels.set_z_index(0)
@@ -176,17 +180,27 @@ class Discrete(MovingCameraScene):
                 lines.add(line)
                 
                 # Label
-                label = DecimalNumber(
-                    weight,
-                    num_decimal_places=2,
-                    font_size=24
-                ).move_to(line.get_center())
-
-                # Optional: rotate label to match line direction
-                angle = line.get_angle()
-                label.rotate(angle)
-
-                line_labels.add(label)
+                x = line.get_center()[0]
+                y = line.get_center()[1]
+                if abs(x - camera_x) < view_width/2 and abs(y - camera_y) < view_height/2:
+                
+                    label = DecimalNumber(
+                        weight,
+                        num_decimal_places=2,
+                        font_size=24
+                    ).move_to(line.get_center())
+                    
+                    # Rotate label to match line direction
+                    angle = line.get_angle()
+                    label.rotate(angle)
+                    
+                    if 0.5 < angle < 1.0:
+                        label.move_to(label.get_center() + 0.2*(UP + RIGHT))
+                    elif 2.0 < angle < 2.5:
+                        label.move_to(label.get_center() + 0.2*(UP + LEFT))
+                        label.rotate(PI*0.5)
+                    
+                    line_labels.add(label)
                 
         lines.set_z_index(-1)
         line_labels.set_z_index(-1)
