@@ -264,7 +264,7 @@ def main():
     plt.xlim(-margin, x_length + margin)
     plt.ylim(-margin, y_length + margin)
 
-    plt.title('Heatmap with Shortest Path')
+    plt.title('Shortest Path in a Voronoi Diagram of Cows')
     plt.xlabel('X Axis')
     plt.ylabel('Y Axis')
     plt.savefig('heatmap2.png')
