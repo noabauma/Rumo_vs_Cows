@@ -175,7 +175,7 @@ class Discrete(MovingCameraScene):
                 )
                 lines.add(line)
                 
-                        # Label
+                # Label
                 label = DecimalNumber(
                     weight,
                     num_decimal_places=2,
@@ -195,6 +195,8 @@ class Discrete(MovingCameraScene):
         self.wait()
         
         # TODO: Draw the labels of the lines
+        self.add(line_labels)
+        self.wait()
         
         # TODO: Draw the starting and end point
         

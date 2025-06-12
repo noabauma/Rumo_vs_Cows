@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import shortest_path
+from scipy.integrate import simpson
 
 """
 This code computes the problem of Rumo having to pass a field with n cows.
@@ -25,6 +26,9 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
 
     Returns:
         cost (float): The cost of crossing this edge
+        t (float): debugging value to check if m lies in between a to b or not
+    """
+    
     """
     crit_dist = 5    # critical distance between cows [m] closer than this will lead to rumo barking
     
@@ -48,6 +52,22 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
         #cost = max(1/np.dot(c1 - b, c1 - b), 0.1)
     
     return cost, t
+    """
+
+    # Generate n evenly spaced points along the edge
+    n = 10
+    ts = np.linspace(0, 1, n)
+    points = a[None, :] + ts[:, None] * (b - a)[None, :]  # shape (n, 2)
+
+    # Compute cost at each sampled point (adjust your cost logic as needed)
+    crit_dist = 10
+    costs = np.maximum(1 - np.linalg.norm(points - c1, axis=1) / crit_dist, 0.1)
+
+    # Scale by arc length of the edge (distance from a to b)
+    dist = np.linalg.norm(b - a)
+    cost = simpson(costs, ts) * dist
+    
+    return cost, 0.5
     
 def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: float, y_length: float, start_coord: float, end_coord: float):
     """Computing the weighted graph from the voronoi diagram
