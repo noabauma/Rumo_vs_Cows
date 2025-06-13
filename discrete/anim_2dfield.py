@@ -5,13 +5,18 @@ from main import * # all the functions of discrete/main.py
 
 np.random.seed(42)   # seed for the random number generator
 
-class Discrete(MovingCameraScene):        
+class Cross(VGroup):
+    def __init__(self, point=ORIGIN, size=0.2, color=PURE_RED, **kwargs):
+        line1 = Line((UP+LEFT) * size, (DOWN+RIGHT) * size, color=color, **kwargs)
+        line2 = Line((DOWN+LEFT) * size, (UP+RIGHT) * size, color=color, **kwargs)
+        super().__init__(line1, line2)
+        self.move_to(point)
+
+class TwoDField(MovingCameraScene):        
     def construct(self):
-        time_start = time.time()
-    
         ##### Step 1: Let's build the problem field
-        x_length = 40        # x coordinate of the cows field [m]
-        y_length = 25        # y coordinate of the cows field [m]
+        x_length = 30        # x coordinate of the cows field [m]
+        y_length = 20        # y coordinate of the cows field [m]
         n_obst = 10          # number of obsticles (cows)
         
         np.random.seed(42)   # seed for the random number generator
@@ -84,70 +89,14 @@ class Discrete(MovingCameraScene):
         self.wait()
         
         # Let's move the camera to a corner
-        margin = max(x_length, y_length)/55  # optional margin
-        camera_x = x_length/20
+        margin = max(x_length, y_length)/60  # optional margin
+        camera_x = x_length/10
         camera_y = y_length*(19/20)
-        view_width = (x_length/10 + margin)*(16/9)
-        view_height = y_length/10 + margin
+        view_width = (x_length/5 + margin)*(16/9)
+        view_height = y_length/5 + margin
         self.play(self.camera.frame.animate.move_to([camera_x, camera_y, 0]).set(width=view_width, height=view_height))
         self.wait()
-        
-        # Save the state of camera
-        self.camera.frame.save_state()
-        
-        # Animate the cost function here before adding the points
-        ax = Axes(
-            x_range=[0, 20, 2],       # [min, max, step] → tick marks every 1 unit
-            y_range=[0, 1, 0.1],      # ticks every 0.2 on y-axis
-            x_length=9,
-            y_length=3,
-            axis_config={
-                "color": WHITE,
-                "include_ticks": True,
-                "include_numbers": True,
-                "decimal_number_config": {"num_decimal_places": 1},
-            },
-            x_axis_config={
-                "numbers_to_include": [0, 10, 20],  # customize labels if you want
-            },
-            y_axis_config={
-                "numbers_to_include": [0, 0.1, 1.0],
-            }
-        )
-
-        # Move to (-7, 4) for example
-        ax.move_to([-10, 4, 0])
-
-        # Plot your graph
-        graph1 = ax.plot(lambda x: cost_function([0], x), color=WHITE)
-        
-        graph_labels = ax.get_axis_labels(x_label="distance [m]", y_label="cost")
-        
-        self.add(ax, graph1, graph_labels)
-        
-        # Zoom in slightly and move to the graph
-        self.play(
-            self.camera.frame.animate.set(width=12).move_to(ax.get_center()),
-            run_time=2
-        )
-        self.wait()
-        
-        # Plot my graphs
-        graph2 = ax.plot(lambda x: np.exp(-x/10.0), color=BLUE)
-        
-        
-        #self.add(graph2)
-        self.play(Create(graph2), run_time=3)
-        self.wait()
-        
-        
-        # TODO: Show the mathematical formula of the nodes
-        
-        
-        
-        self.play(Restore(self.camera.frame))
-        self.wait()
-        
+                
         # Labels for z-values (heatmap values)
         labels = VGroup(*[
             DecimalNumber(z, num_decimal_places=2, color=WHITE)
@@ -187,7 +136,7 @@ class Discrete(MovingCameraScene):
                     label = DecimalNumber(
                         weight,
                         num_decimal_places=2,
-                        font_size=24
+                        font_size=20
                     ).move_to(line.get_center())
                     
                     # Rotate label to match line direction
@@ -198,7 +147,9 @@ class Discrete(MovingCameraScene):
                         label.move_to(label.get_center() + 0.2*(UP + RIGHT))
                     elif 2.0 < angle < 2.5:
                         label.move_to(label.get_center() + 0.2*(UP + LEFT))
-                        label.rotate(PI*0.5)
+                        label.rotate(PI)
+                    else:
+                        label.move_to(label.get_center() + 0.2*(UP))
                     
                     line_labels.add(label)
                 
@@ -219,4 +170,3 @@ class Discrete(MovingCameraScene):
         # TODO: Show it in the 3d view
         
         # TODO: Compute the complexity
-
