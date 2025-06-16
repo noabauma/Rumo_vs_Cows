@@ -65,7 +65,7 @@ class TwoDField(MovingCameraScene):
         
         # Save the state of camera
         self.camera.frame.save_state()
-
+        
         # Create Dot mobjects from the array
         cows = VGroup(*[
             Cross(point=[x, y, 0], size=0.2, color=PURE_RED, stroke_width=7)
@@ -76,7 +76,7 @@ class TwoDField(MovingCameraScene):
         cows.set_z_index(1)
         
         grid_points_ = VGroup(*[
-            Dot(point=[x, y, 0], radius=0.2, color=interpolate_color(BLUE, RED, alpha=z))
+            Dot(point=[x, y, 0], radius=0.2, color=interpolate_color(BLUE, ORANGE, alpha=z))
             for x, y, z in grid_points
         ])
         
@@ -174,12 +174,12 @@ class TwoDField(MovingCameraScene):
         self.camera.frame.save_state()
         
         # TODO: Draw the starting and end point
-        start_point = Star(color=PURE_GREEN, fill_opacity=1).scale(0.6).move_to([grid_points[start_coord, 0], grid_points[start_coord, 1], 0])
-        end_point = Circle(color=GOLD, fill_opacity=1).scale(0.6).move_to([grid_points[end_coord, 0], grid_points[end_coord, 1], 0])
+        start_point = Circle(color=WHITE, fill_opacity=1).scale(0.6).move_to([grid_points[start_coord, 0], grid_points[start_coord, 1], 0])
+        end_point = Star(color=WHITE, fill_opacity=1).scale(0.6).move_to([grid_points[end_coord, 0], grid_points[end_coord, 1], 0])
 
-        self.play(Indicate(start_point, color=PURE_GREEN))
+        self.play(Indicate(start_point, color=WHITE))
         self.wait()
-        self.play(Indicate(end_point, color=GOLD))
+        self.play(Indicate(end_point, color=WHITE))
         self.wait()
         
         # TODO: Draw the shortest path
@@ -187,7 +187,7 @@ class TwoDField(MovingCameraScene):
         for i, j in zip(path[:-1], path[1:]):
             p1 = [grid_points[i, 0], grid_points[i, 1], 0]
             p2 = [grid_points[j, 0], grid_points[j, 1], 0]
-            line = Line(p1, p2, color=GREEN, stroke_width=10)
+            line = Line(p1, p2, color=WHITE, stroke_width=10)
             path_lines.add(line)
         
         path_lines.set_z_index(2)

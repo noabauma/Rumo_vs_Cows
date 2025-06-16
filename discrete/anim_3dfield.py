@@ -5,7 +5,7 @@ from main import * # all the functions of discrete/main.py
 
 np.random.seed(42)   # seed for the random number generator
 
-class TreeDField(ThreeDScene, MovingCameraScene):        
+class TreeDField(MovingCameraScene, ThreeDScene):        
     def construct(self):
         ##### Step 1: Let's build the problem field
         x_length = 30        # x coordinate of the cows field [m]
