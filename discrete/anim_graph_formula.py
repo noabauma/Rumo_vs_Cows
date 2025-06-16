@@ -87,3 +87,5 @@ class Graph_Formula(MovingCameraScene):
         self.wait(2)
 
         # TODO: Compute the complexity
+        
+        # TODO: Add a 3 visualization of the cost function

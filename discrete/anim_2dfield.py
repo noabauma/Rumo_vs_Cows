@@ -187,7 +187,7 @@ class TwoDField(MovingCameraScene):
         for i, j in zip(path[:-1], path[1:]):
             p1 = [grid_points[i, 0], grid_points[i, 1], 0]
             p2 = [grid_points[j, 0], grid_points[j, 1], 0]
-            line = Line(p1, p2, color=GREEN, stroke_width=8)
+            line = Line(p1, p2, color=GREEN, stroke_width=10)
             path_lines.add(line)
         
         path_lines.set_z_index(2)

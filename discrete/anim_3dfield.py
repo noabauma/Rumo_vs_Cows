@@ -5,7 +5,7 @@ from main import * # all the functions of discrete/main.py
 
 np.random.seed(42)   # seed for the random number generator
 
-class TwoDField(MovingCameraScene):        
+class TreeDField(ThreeDScene, MovingCameraScene):        
     def construct(self):
         ##### Step 1: Let's build the problem field
         x_length = 30        # x coordinate of the cows field [m]
@@ -48,6 +48,33 @@ class TwoDField(MovingCameraScene):
         path = path[::-1]  # Reverse the path to get it from source to destination
 
         ##### Step 5 manim the shit out of it!
-        # TODO: Show it in the 3d view
         
+        # At the border (i.e. Rectangle)
+        rect = Rectangle(width=x_length, height=y_length).move_to(x_length/2*RIGHT+y_length/2*UP)
         
+        # Move the camera to the rectangle
+        margin = max(x_length, y_length)*0.1
+        self.play(self.camera.frame.animate.move_to(rect).set(width=x_length + margin, height=y_length + margin))
+        
+        # Save the state of camera
+        self.camera.frame.save_state()
+
+        # Create Dot mobjects from the array
+        cows = VGroup(*[
+            Dot3D(point=[x, y, 1], size=0.2, color=PURE_RED, stroke_width=7)
+            for x, y in obst_coord
+        ])
+        
+        # Make the cows infront of the grid_points
+        cows.set_z_index(1)
+        
+        grid_points_ = VGroup(*[
+            Dot3D(point=[x, y, z], radius=0.2, color=interpolate_color(BLUE, RED, alpha=z))
+            for x, y, z in grid_points
+        ])
+        
+        # Camera movement
+        self.set_camera_orientation(phi=65 * DEGREES, theta=45 * DEGREES)
+        self.begin_ambient_camera_rotation(rate=0.2)
+        self.wait(5)
+        self.stop_ambient_camera_rotation()
