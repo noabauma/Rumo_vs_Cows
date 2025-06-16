@@ -65,7 +65,7 @@ class Graph_Formula(MovingCameraScene):
 
         # Final title and formulas (Cost summary) — further above
         title = Text("Cost Function for Rumo", font_size=36)
-        title.to_edge(UP)
+        title.move_to(UP*10)
 
         eq1 = MathTex(
             r"\text{cost}(r, c_i) = \max\left(1 - \frac{\|r - c_i\|_2}{\text{crit}},\ 0.1\right)"
@@ -78,6 +78,9 @@ class Graph_Formula(MovingCameraScene):
         eqs.next_to(title, DOWN, buff=0.3)
 
         # Show final heading and equations
+        self.play(self.camera.frame.animate.move_to(title))
+        self.wait()
+        
         self.play(Write(title))
         self.wait(0.5)
         self.play(Write(eqs))

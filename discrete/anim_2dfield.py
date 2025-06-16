@@ -6,9 +6,9 @@ from main import * # all the functions of discrete/main.py
 np.random.seed(42)   # seed for the random number generator
 
 class Cross(VGroup):
-    def __init__(self, point=ORIGIN, size=0.2, color=PURE_RED, **kwargs):
-        line1 = Line((UP+LEFT) * size, (DOWN+RIGHT) * size, color=color, **kwargs)
-        line2 = Line((DOWN+LEFT) * size, (UP+RIGHT) * size, color=color, **kwargs)
+    def __init__(self, point=ORIGIN, size=0.2, color=PURE_RED, stroke_width=4, **kwargs):
+        line1 = Line((UP + LEFT) * size, (DOWN + RIGHT) * size, color=color, stroke_width=stroke_width, **kwargs)
+        line2 = Line((DOWN + LEFT) * size, (UP + RIGHT) * size, color=color, stroke_width=stroke_width, **kwargs)
         super().__init__(line1, line2)
         self.move_to(point)
 
@@ -67,13 +67,13 @@ class TwoDField(MovingCameraScene):
         self.camera.frame.save_state()
 
         # Create Dot mobjects from the array
-        points = VGroup(*[
-            Dot(point=[x, y, 0], radius=0.5, color=RED_A)
+        cows = VGroup(*[
+            Cross(point=[x, y, 0], size=0.2, color=PURE_RED, stroke_width=7)
             for x, y in obst_coord
         ])
         
         # Make the cows infront of the grid_points
-        points.set_z_index(1)
+        cows.set_z_index(1)
         
         grid_points_ = VGroup(*[
             Dot(point=[x, y, 0], radius=0.2, color=interpolate_color(BLUE, RED, alpha=z))
@@ -84,7 +84,7 @@ class TwoDField(MovingCameraScene):
 
         # Animate
         self.play(Create(rect))
-        self.play(LaggedStartMap(FadeIn, points, lag_ratio=0.05))
+        self.play(LaggedStartMap(FadeIn, cows, lag_ratio=0.05))
         self.play(Create(grid_points_))
         self.wait()
         
@@ -144,12 +144,12 @@ class TwoDField(MovingCameraScene):
                     label.rotate(angle)
                     
                     if 0.5 < angle < 1.0:
-                        label.move_to(label.get_center() + 0.2*(UP + RIGHT))
+                        label.move_to(label.get_center() + 0.20*(UP + RIGHT))
                     elif 2.0 < angle < 2.5:
-                        label.move_to(label.get_center() + 0.2*(UP + LEFT))
+                        label.move_to(label.get_center() + 0.20*(UP + LEFT))
                         label.rotate(PI)
                     else:
-                        label.move_to(label.get_center() + 0.2*(UP))
+                        label.move_to(label.get_center() + 0.1*(UP))
                     
                     line_labels.add(label)
                 
@@ -159,13 +159,38 @@ class TwoDField(MovingCameraScene):
         self.play(LaggedStartMap(Create, lines, lag_ratio=0.01), run_time=5)
         self.wait()
         
-        # TODO: Draw the labels of the lines
+        # Draw the labels of the lines
         self.add(line_labels)
         self.wait()
         
+        # Move out again to show the while field        
+        margin = max(x_length, y_length)*0.1
+        self.play(FadeOut(labels), 
+                  FadeOut(line_labels), 
+                  self.camera.frame.animate.move_to(rect).set(width=x_length + margin, height=y_length + margin))
+        self.wait()
+        
+        # Save the state of camera
+        self.camera.frame.save_state()
+        
         # TODO: Draw the starting and end point
+        start_point = Star(color=PURE_GREEN, fill_opacity=1).scale(0.6).move_to([grid_points[start_coord, 0], grid_points[start_coord, 1], 0])
+        end_point = Circle(color=GOLD, fill_opacity=1).scale(0.6).move_to([grid_points[end_coord, 0], grid_points[end_coord, 1], 0])
+
+        self.play(Indicate(start_point, color=PURE_GREEN))
+        self.wait()
+        self.play(Indicate(end_point, color=GOLD))
+        self.wait()
         
         # TODO: Draw the shortest path
+        path_lines = VGroup()
+        for p1, p2 in zip(path_points[:-1], path_points[1:]):
+            line = Line(p1, p2, color=BLUE, stroke_width=6)
+            path_lines.add(line)
+
+        # Animate the path drawing
+        self.play(Create(path_lines), run_time=3)
+        self.wait()
         
         # TODO: Show it in the 3d view
         
