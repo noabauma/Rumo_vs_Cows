@@ -184,14 +184,14 @@ class TwoDField(MovingCameraScene):
         
         # TODO: Draw the shortest path
         path_lines = VGroup()
-        for p1, p2 in zip(path_points[:-1], path_points[1:]):
-            line = Line(p1, p2, color=BLUE, stroke_width=6)
+        for i, j in zip(path[:-1], path[1:]):
+            p1 = [grid_points[i, 0], grid_points[i, 1], 0]
+            p2 = [grid_points[j, 0], grid_points[j, 1], 0]
+            line = Line(p1, p2, color=GREEN, stroke_width=8)
             path_lines.add(line)
+        
+        path_lines.set_z_index(2)
 
         # Animate the path drawing
         self.play(Create(path_lines), run_time=3)
         self.wait()
-        
-        # TODO: Show it in the 3d view
-        
-        # TODO: Compute the complexity

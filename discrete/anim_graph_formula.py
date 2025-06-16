@@ -78,10 +78,12 @@ class Graph_Formula(MovingCameraScene):
         eqs.next_to(title, DOWN, buff=0.3)
 
         # Show final heading and equations
-        self.play(self.camera.frame.animate.move_to(title))
+        self.play(self.camera.frame.animate.move_to(eq1))
         self.wait()
         
         self.play(Write(title))
         self.wait(0.5)
         self.play(Write(eqs))
         self.wait(2)
+
+        # TODO: Compute the complexity
