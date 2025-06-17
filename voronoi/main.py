@@ -148,6 +148,7 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     n_nodes = len(all_idx)
     graph = np.zeros((n_nodes, n_nodes))
     for middle_point in middle_points:
+        # O(n) cost of searching this idx in all_idx
         i = np.where(all_idx == middle_point[0])[0][0]
         j = np.where(all_idx == middle_point[1])[0][0]
         cost = middle_point[2]

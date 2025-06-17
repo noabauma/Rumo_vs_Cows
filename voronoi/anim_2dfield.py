@@ -99,74 +99,69 @@ class TwoDField_Vor(MovingCameraScene):
         # Make the cows infront of the grid_points
         cows.set_z_index(1)
         
-        og_obst_coord_ = VGroup(*[
-            Dot(point=[vertex[0], vertex[1], 0], radius=0.2, color=BLUE)
-            for vertex in vor.vertices
-        ])
+        vor_vertices_b  = VGroup()
+        vor_vertices_og = VGroup()
         
-        og_obst_coord_.set_z_index(0)
+        for x, y in vor.vertices:
+            if (1e-6 < x < x_length) and (1e-6 < y < y_length):
+                dot = Dot(point=[x, y, 0], radius=0.2, color=BLUE)
+                vor_vertices_og.add(dot)
+                
+            elif (-1e-6 < x < x_length + 1e-6) and (-1e-6 < y < y_length + 1e-6):
+                dot = Dot(point=[x, y, 0], radius=0.2, color=ORANGE)
+                vor_vertices_b.add(dot)
+
+        
+        vor_vertices_og.set_z_index(0)
 
         # Animate
         self.play(Create(rect))
         self.play(LaggedStartMap(FadeIn, cows, lag_ratio=0.05))
-        self.play(Create(og_obst_coord_))
+        self.play(Create(vor_vertices_og))
         self.wait()
         
         
         # Now adding the edges (with labels)
-        """
+        
         lines = VGroup()
-        line_labels = VGroup()
-        coo = graph.tocoo()
 
-        for i, j, weight in zip(coo.row, coo.col, coo.data):
-            if i < j:
-                start = grid_points[i]
-                end = grid_points[j]
-
+        for i, j in vor.ridge_vertices:
+            #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
+            
+            if i == -1 or j == -1:
+                continue
+            
+            a = vor.vertices[i]
+            b = vor.vertices[j]
+            
+            if (1e-6 < a[0] < x_length) and (1e-6 < a[1] < y_length) and (1e-6 < b[0] < x_length) and (1e-6 < b[1] < y_length):
                 line = Line(
-                    [start[0], start[1], 0],
-                    [end[0], end[1], 0],
-                    stroke_width=2, # 1 + 3 * weight,
+                    [a[0], a[1], 0],
+                    [b[0], b[1], 0],
+                    stroke_width=2,
                     color=BLUE # interpolate_color(BLUE, RED, weight)
                 )
                 lines.add(line)
-                
-                # Label
-                x = line.get_center()[0]
-                y = line.get_center()[1]
-                if abs(x - camera_x) < view_width/2 and abs(y - camera_y) < view_height/2:
-                
-                    label = DecimalNumber(
-                        weight,
-                        num_decimal_places=2,
-                        font_size=20
-                    ).move_to(line.get_center())
-                    
-                    # Rotate label to match line direction
-                    angle = line.get_angle()
-                    label.rotate(angle)
-                    
-                    if 0.5 < angle < 1.0:
-                        label.move_to(label.get_center() + 0.20*(UP + RIGHT))
-                    elif 2.0 < angle < 2.5:
-                        label.move_to(label.get_center() + 0.20*(UP + LEFT))
-                        label.rotate(PI)
-                    else:
-                        label.move_to(label.get_center() + 0.1*(UP))
-                    
-                    line_labels.add(label)
+            elif (-1e-6 < a[0] < x_length + 1e-6) and (-1e-6 < a[1] < y_length + 1e-6) and (-1e-6 < b[0] < x_length + 1e-6) and (-1e-6 < b[1] < y_length + 1e-6):
+                line = Line(
+                    [a[0], a[1], 0],
+                    [b[0], b[1], 0],
+                    stroke_width=2,
+                    color=ORANGE # interpolate_color(BLUE, RED, weight)
+                )
+                lines.add(line)
                 
         lines.set_z_index(-1)
-        line_labels.set_z_index(-1)
 
-        self.play(LaggedStartMap(Create, lines, lag_ratio=0.01), run_time=5)
+        self.play(LaggedStartMap(FadeIn, lines, lag_ratio=0.01), run_time=5)
         self.wait()
         
-        # Draw the labels of the lines
-        self.add(line_labels)
+        # Draw the border points as ?
+        self.play(Create(vor_vertices_b))
         self.wait()
         
+        
+        """
         # Move out again to show the while field        
         margin = max(x_length, y_length)*0.1
         self.play(FadeOut(labels), 
