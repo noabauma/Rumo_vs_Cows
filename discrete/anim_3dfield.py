@@ -5,7 +5,7 @@ from main import * # all the functions of discrete/main.py
 
 np.random.seed(42)   # seed for the random number generator
 
-class TreeDField(MovingCameraScene, ThreeDScene):        
+class TreeDField(ThreeDScene):        
     def construct(self):
         ##### Step 1: Let's build the problem field
         x_length = 30        # x coordinate of the cows field [m]
@@ -54,14 +54,14 @@ class TreeDField(MovingCameraScene, ThreeDScene):
         
         # Move the camera to the rectangle
         margin = max(x_length, y_length)*0.1
-        self.play(self.camera.frame.animate.move_to(rect).set(width=x_length + margin, height=y_length + margin))
-        
-        # Save the state of camera
-        self.camera.frame.save_state()
+        self.add(rect)
+        self.set_camera_orientation(phi=60 * DEGREES, theta=30 * DEGREES)
+        self.begin_ambient_camera_rotation(rate=0.1)
+        self.wait(3)
 
         # Create Dot mobjects from the array
         cows = VGroup(*[
-            Dot3D(point=[x, y, 1], size=0.2, color=PURE_RED, stroke_width=7)
+            Dot3D(point=[x, y, 1], radius=0.2, color=PURE_RED)
             for x, y in obst_coord
         ])
         
@@ -76,5 +76,5 @@ class TreeDField(MovingCameraScene, ThreeDScene):
         # Camera movement
         self.set_camera_orientation(phi=65 * DEGREES, theta=45 * DEGREES)
         self.begin_ambient_camera_rotation(rate=0.2)
-        self.wait(5)
+        self.wait()
         self.stop_ambient_camera_rotation()
