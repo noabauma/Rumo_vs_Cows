@@ -90,6 +90,7 @@ class TwoDField_Vor(MovingCameraScene):
         # Save the state of camera
         self.camera.frame.save_state()
         
+        
         # Create Dot mobjects from the array
         cows = VGroup(*[
             Cross(point=[x, y, 0], size=0.2, color=PURE_RED, stroke_width=7)
@@ -117,6 +118,16 @@ class TwoDField_Vor(MovingCameraScene):
         # Animate
         self.play(Create(rect))
         self.play(LaggedStartMap(FadeIn, cows, lag_ratio=0.05))
+        
+        # Draw the starting and end point
+        start_point = Circle(color=WHITE, fill_opacity=1).scale(0.6).move_to([vor.vertices[all_idx[0], 0], vor.vertices[all_idx[0], 1], 0])
+        end_point = Star(color=WHITE, fill_opacity=1).scale(0.6).move_to([vor.vertices[all_idx[-1], 0], vor.vertices[all_idx[-1], 1], 0])
+
+        self.play(Indicate(start_point, color=WHITE))
+        self.wait()
+        self.play(Indicate(end_point, color=WHITE))
+        self.wait()
+        
         self.play(Create(vor_vertices_og))
         self.wait()
         
@@ -156,9 +167,11 @@ class TwoDField_Vor(MovingCameraScene):
         self.play(LaggedStartMap(FadeIn, lines, lag_ratio=0.01), run_time=5)
         self.wait()
         
-        # Draw the border points as ?
-        self.play(Create(vor_vertices_b))
+        # Draw the border points
+        self.play(Indicate(vor_vertices_b))
         self.wait()
+        
+        # TODO: Difficult: either mirroring or transform (easy) the Mirrors
         
         
         """
@@ -172,14 +185,7 @@ class TwoDField_Vor(MovingCameraScene):
         # Save the state of camera
         self.camera.frame.save_state()
         
-        # TODO: Draw the starting and end point
-        start_point = Circle(color=WHITE, fill_opacity=1).scale(0.6).move_to([grid_points[start_coord, 0], grid_points[start_coord, 1], 0])
-        end_point = Star(color=WHITE, fill_opacity=1).scale(0.6).move_to([grid_points[end_coord, 0], grid_points[end_coord, 1], 0])
-
-        self.play(Indicate(start_point, color=WHITE))
-        self.wait()
-        self.play(Indicate(end_point, color=WHITE))
-        self.wait()
+        
         
         # TODO: Draw the shortest path
         path_lines = VGroup()

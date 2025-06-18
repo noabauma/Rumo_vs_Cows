@@ -12,7 +12,7 @@ class Cross(VGroup):
         super().__init__(line1, line2)
         self.move_to(point)
 
-class TwoDField(MovingCameraScene):        
+class TwoDField_Dis(MovingCameraScene):        
     def construct(self):
         ##### Step 1: Let's build the problem field
         x_length = 30        # x coordinate of the cows field [m]
@@ -66,6 +66,7 @@ class TwoDField(MovingCameraScene):
         # Save the state of camera
         self.camera.frame.save_state()
         
+        
         # Create Dot mobjects from the array
         cows = VGroup(*[
             Cross(point=[x, y, 0], size=0.2, color=PURE_RED, stroke_width=7)
@@ -85,6 +86,19 @@ class TwoDField(MovingCameraScene):
         # Animate
         self.play(Create(rect))
         self.play(LaggedStartMap(FadeIn, cows, lag_ratio=0.05))
+        
+        # Draw the starting and end point
+        start_point = Circle(color=WHITE, fill_opacity=1).scale(0.6).move_to([grid_points[start_coord, 0], grid_points[start_coord, 1], 0])
+        end_point = Star(color=WHITE, fill_opacity=1).scale(0.6).move_to([grid_points[end_coord, 0], grid_points[end_coord, 1], 0])
+
+        start_point.set_z_index(2)
+        end_point.set_z_index(2)
+
+        self.play(Indicate(start_point, color=WHITE))
+        self.wait()
+        self.play(Indicate(end_point, color=WHITE))
+        self.wait()
+        
         self.play(Create(grid_points_))
         self.wait()
         
@@ -173,14 +187,15 @@ class TwoDField(MovingCameraScene):
         # Save the state of camera
         self.camera.frame.save_state()
         
-        # TODO: Draw the starting and end point
-        start_point = Circle(color=WHITE, fill_opacity=1).scale(0.6).move_to([grid_points[start_coord, 0], grid_points[start_coord, 1], 0])
-        end_point = Star(color=WHITE, fill_opacity=1).scale(0.6).move_to([grid_points[end_coord, 0], grid_points[end_coord, 1], 0])
+        # Replace existing dots with larger ones
+        larger_dots = VGroup(*[
+            Dot(p.get_center(), radius=0.3, color=p.color)
+            for p in grid_points_
+        ])
 
-        self.play(Indicate(start_point, color=WHITE))
+        self.play(Transform(grid_points_, larger_dots))
         self.wait()
-        self.play(Indicate(end_point, color=WHITE))
-        self.wait()
+
         
         # TODO: Draw the shortest path
         path_lines = VGroup()
