@@ -100,8 +100,9 @@ class TwoDField_Vor(MovingCameraScene):
         # Make the cows infront of the grid_points
         cows.set_z_index(1)
         
-        vor_vertices_b  = VGroup()
-        vor_vertices_og = VGroup()
+        vor_vertices_b   = VGroup()
+        vor_vertices_og  = VGroup()
+        vor_vertices_all = VGroup()
         
         for x, y in vor.vertices:
             if (1e-6 < x < x_length) and (1e-6 < y < y_length):
@@ -111,9 +112,14 @@ class TwoDField_Vor(MovingCameraScene):
             elif (-1e-6 < x < x_length + 1e-6) and (-1e-6 < y < y_length + 1e-6):
                 dot = Dot(point=[x, y, 0], radius=0.2, color=ORANGE)
                 vor_vertices_b.add(dot)
+                
+            dot = Dot(point=[x, y, 0], radius=0.2, color=BLUE)
+            vor_vertices_all.add(dot)
 
         
         vor_vertices_og.set_z_index(0)
+        vor_vertices_b.set_z_index(0)
+        vor_vertices_all.set_z_index(0)
 
         # Animate
         self.play(Create(rect))
@@ -131,6 +137,8 @@ class TwoDField_Vor(MovingCameraScene):
         # Now adding the edges (with labels)
         
         lines = VGroup()
+        lines_b = VGroup()
+        lines_all = VGroup()
 
         for i, j in vor.ridge_vertices:
             #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
@@ -156,65 +164,35 @@ class TwoDField_Vor(MovingCameraScene):
                     stroke_width=4,
                     color=ORANGE # interpolate_color(BLUE, RED, weight)
                 )
-                lines.add(line)
+                lines_b.add(line)
+                
+            line = Line(
+                [a[0], a[1], 0],
+                [b[0], b[1], 0],
+                stroke_width=4,
+                color=BLUE # interpolate_color(BLUE, RED, weight)
+            )
+            lines_all.add(line)
                 
         lines.set_z_index(-1)
+        lines_b.set_z_index(-1)
+        lines_all.set_z_index(-1)
 
         self.play(Create(vor_vertices_og))
-        self.play(Create(lines))
+        self.play(Create(lines), Create(lines_b))
         self.wait()
         
         # Draw the border points
         self.play(Indicate(vor_vertices_b))
         self.wait()
         
-        # Mirroring the OG field
-        self.play(self.camera.frame.animate.scale(3), FadeOut(vor_vertices_b))
-        self.camera.frame.save_state()
+        self.play(
+        self.camera.frame.animate.shift(0.5*y_length * UP).scale(2), run_time=2)
+        self.play(FadeOut(vor_vertices_og, lines, vor_vertices_b, lines_b))
+        self.wait()
         
-        group_og = VGroup(rect, cows, vor_vertices_og, lines)
-        
-        # Left
-        mirror_l = group_og.copy()
-        mirror_l.move_to(group_og.get_center())
-        
-        self.play(Rotate(mirror_l, angle=PI, axis=UP), run_time=2)
-        self.play(mirror_l.animate.shift(x_length * LEFT), run_time=1)
-        
-        # Up + Left
-        mirror_ul = mirror_l.copy()
-        mirror_ul.move_to(mirror_l.get_center())
-        
-        self.play(Rotate(mirror_ul, angle=PI, axis=RIGHT), run_time=2)
-        self.play(mirror_ul.animate.shift(y_length * UP), run_time=1)
-        
-        # Right
-        mirror_r = group_og.copy()
-        mirror_r.move_to(group_og.get_center())
-        
-        self.play(Rotate(mirror_r, angle=PI, axis=DOWN), run_time=2)
-        self.play(mirror_r.animate.shift(x_length * RIGHT), run_time=1)
-        
-        # Down + Right
-        mirror_dr = mirror_r.copy()
-        mirror_dr.move_to(mirror_r.get_center())
-        
-        self.play(Rotate(mirror_dr, angle=PI, axis=RIGHT), run_time=2)
-        self.play(mirror_dr.animate.shift(y_length * DOWN), run_time=1)
-        
-        # Down + Left
-        mirror_dl = mirror_l.copy()
-        mirror_dl.move_to(mirror_l.get_center())
-        
-        self.play(Rotate(mirror_dl, angle=PI, axis=LEFT), run_time=2)
-        self.play(mirror_dl.animate.shift(y_length * DOWN), run_time=1)
-        
-        # Up + Right
-        mirror_ur = mirror_r.copy()
-        mirror_ur.move_to(mirror_r.get_center())
-        
-        self.play(Rotate(mirror_ur, angle=PI, axis=LEFT), run_time=2)
-        self.play(mirror_ur.animate.shift(y_length * UP), run_time=1)
+        group_og = VGroup(rect, cows)#, vor_vertices_og, lines, lines_b)
+        group_og_v = VGroup(vor_vertices_og, lines, lines_b)
         
         # Up
         mirror_u = group_og.copy()
@@ -222,15 +200,79 @@ class TwoDField_Vor(MovingCameraScene):
         
         self.play(Rotate(mirror_u, angle=PI, axis=LEFT), run_time=2)
         self.play(mirror_u.animate.shift(y_length * UP), run_time=1)
+        self.wait()
+        
+        self.play(self.camera.frame.animate.scale(0.5))
+        
+        mirror_u_v = group_og_v.copy()
+        mirror_u_v.move_to(group_og_v.get_center())
+        
+        mirror_u_v.rotate(PI, axis=LEFT)
+        mirror_u_v.shift(y_length * UP)
+        
+        self.play(FadeIn(mirror_u_v, vor_vertices_og, lines, lines_b))
+        self.wait()
+        self.play(Indicate(vor_vertices_b))
+        self.wait()
+        
+        
+        self.play(self.camera.frame.animate.move_to(rect), self.camera.frame.animate.scale(3), FadeOut(vor_vertices_b))
+        self.camera.frame.save_state()
+        
+        # Left
+        mirror_l = group_og.copy()
+        mirror_l.move_to(group_og.get_center())
+        
+        self.play(Rotate(mirror_l, angle=PI, axis=UP), run_time=1)
+        self.play(mirror_l.animate.shift(x_length * LEFT), run_time=0.5)
+        
+        # Up + Left
+        mirror_ul = mirror_l.copy()
+        mirror_ul.move_to(mirror_l.get_center())
+        
+        self.play(Rotate(mirror_ul, angle=PI, axis=RIGHT), run_time=1)
+        self.play(mirror_ul.animate.shift(y_length * UP), run_time=0.5)
+        
+        # Right
+        mirror_r = group_og.copy()
+        mirror_r.move_to(group_og.get_center())
+        
+        self.play(Rotate(mirror_r, angle=PI, axis=DOWN), run_time=1)
+        self.play(mirror_r.animate.shift(x_length * RIGHT), run_time=0.5)
+        
+        # Down + Right
+        mirror_dr = mirror_r.copy()
+        mirror_dr.move_to(mirror_r.get_center())
+        
+        self.play(Rotate(mirror_dr, angle=PI, axis=RIGHT), run_time=1)
+        self.play(mirror_dr.animate.shift(y_length * DOWN), run_time=0.5)
+        
+        # Down + Left
+        mirror_dl = mirror_l.copy()
+        mirror_dl.move_to(mirror_l.get_center())
+        
+        self.play(Rotate(mirror_dl, angle=PI, axis=LEFT), run_time=1)
+        self.play(mirror_dl.animate.shift(y_length * DOWN), run_time=0.5)
+        
+        # Up + Right
+        mirror_ur = mirror_r.copy()
+        mirror_ur.move_to(mirror_r.get_center())
+        
+        self.play(Rotate(mirror_ur, angle=PI, axis=LEFT), run_time=1)
+        self.play(mirror_ur.animate.shift(y_length * UP), run_time=0.5)
+        
         
         # Down
         mirror_d = group_og.copy()
         mirror_d.move_to(group_og.get_center())
         
-        self.play(Rotate(mirror_d, angle=PI, axis=LEFT), run_time=2)
-        self.play(mirror_d.animate.shift(y_length * DOWN), run_time=1)
+        self.play(Rotate(mirror_d, angle=PI, axis=LEFT), run_time=1)
+        self.play(mirror_d.animate.shift(y_length * DOWN), run_time=0.5)
         
+        # Draw all voronoi nodes and edges
+        self.play(FadeIn(vor_vertices_all, lines_all))
         self.wait()
+        
         self.play(self.camera.frame.animate.scale(1./3.))
         self.wait()
         self.play(Indicate(vor_vertices_b))
