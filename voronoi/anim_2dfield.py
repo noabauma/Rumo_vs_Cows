@@ -55,6 +55,8 @@ class TwoDField_Vor(MovingCameraScene):
         # define the starting and end points (as random coordinates on the top and bottom boundary)
         start_coord = np.random.random_sample()*x_length
         end_coord = np.random.random_sample()*x_length
+        
+        print(start_coord, end_coord)
 
         
         ##### Step 2: Computing the Voronoi diagram
@@ -212,11 +214,20 @@ class TwoDField_Vor(MovingCameraScene):
         
         self.play(FadeIn(mirror_u_v, vor_vertices_og, lines, lines_b))
         self.wait()
-        self.play(Indicate(vor_vertices_b))
+        
+        # Filter based on y position
+        visible_subset = VGroup(*[
+            m for m in vor_vertices_b
+            if abs(m.get_center()[1] - y_length) < 1e-6 and 0.0 < m.get_center()[0] < x_length
+        ])
+        visible_subset.set_color(BLUE)
+        vor_vertices_b.set_color(BLUE)
+        
+        self.play(Indicate(visible_subset))
         self.wait()
         
         
-        self.play(self.camera.frame.animate.move_to(rect), self.camera.frame.animate.scale(3), FadeOut(vor_vertices_b))
+        self.play(self.camera.frame.animate.move_to(rect).scale(3), FadeOut(visible_subset))
         self.camera.frame.save_state()
         
         # Left
@@ -278,6 +289,7 @@ class TwoDField_Vor(MovingCameraScene):
         self.play(Indicate(vor_vertices_b))
         self.wait()
         
+        # TODO: zoom in to one line and show cost of it
         
         """
         # Move out again to show the while field        

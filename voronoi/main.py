@@ -124,13 +124,13 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     closest_to_end = (-1, x_length)
     for idx in all_idx:
         vor_vertex = vor.vertices[idx]
-        if vor_vertex[1] == 0.:
+        if abs(vor_vertex[1]) < 1e-6:
             dist = abs(vor_vertex[0] - start_coord)
             
             if dist < closest_to_start[1]:
                 closest_to_start = (idx, dist)
                 
-        elif vor_vertex[1] == y_length:
+        elif abs(vor_vertex[1] - y_length) < 1e-6:
             dist = abs(vor_vertex[0] - end_coord)
             
             if dist < closest_to_end[1]:
