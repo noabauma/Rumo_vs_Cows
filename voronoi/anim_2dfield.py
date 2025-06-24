@@ -56,9 +56,6 @@ class TwoDField_Vor(MovingCameraScene):
         start_coord = np.random.random_sample()*x_length
         end_coord = np.random.random_sample()*x_length
         
-        print(start_coord, end_coord)
-
-        
         ##### Step 2: Computing the Voronoi diagram
         # O(nlogn)
         vor = Voronoi(obst_coord, furthest_site=False)
@@ -290,6 +287,7 @@ class TwoDField_Vor(MovingCameraScene):
         self.wait()
         
         # TODO: zoom in to one line and show cost of it
+        rect_tmp = Rectangle().move_to()
         
         """
         # Move out again to show the while field        

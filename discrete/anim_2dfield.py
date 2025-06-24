@@ -36,10 +36,7 @@ class TwoDField_Dis(MovingCameraScene):
         
         # Define the starting and end points (as indices in the graph)    
         start_coord = int(np.random.random_sample()*x_length + 0.5)  # 0
-        
-        tmp = int(np.random.random_sample()*x_length + 0.5)
-        end_coord = grid_points.shape[0] - int(x_length/grid_spacing + 1) + tmp  # -1
-        print(start_coord, tmp)
+        end_coord = grid_points.shape[0] - int(x_length/grid_spacing + 1) + int(np.random.random_sample()*x_length + 0.5)   # -1
         
         # Swap the end point with the current last one
         swap_nodes(graph, end_coord, -1)

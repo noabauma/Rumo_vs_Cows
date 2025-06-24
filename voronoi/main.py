@@ -26,32 +26,6 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
 
     Returns:
         cost (float): The cost of crossing this edge
-        t (float): debugging value to check if m lies in between a to b or not
-    """
-    
-    """
-    crit_dist = 5    # critical distance between cows [m] closer than this will lead to rumo barking
-    
-    m = (c1 + c2)/2 # middle_point
-    
-    # now we have to check if the middle_point m between is actually on the vertex.
-    # If not, the point (a or b) which is the closest to the cow will be the cost of crossing the edge
-
-    # If t in [0, 1]: m is in between, if t in (-inf, 0): m closer to a and if t in (1, inf): closer to b
-    
-    t = np.dot(b - a, m - a)/np.dot(b - a, b - a)
-    
-    if 0 <= t <= 1:
-        cost = max(1 - np.linalg.norm(c1 - m)/crit_dist, 0.1)
-        #cost = max(1/np.dot(c1 - m, c1 - m), 0.1)
-    elif t < 0:
-        cost = max(1 - np.linalg.norm(c1 - a)/crit_dist, 0.1)
-        #cost = max(1/np.dot(c1 - a, c1 - a), 0.1)
-    else:
-        cost = max(1 - np.linalg.norm(c1 - b)/crit_dist, 0.1)
-        #cost = max(1/np.dot(c1 - b, c1 - b), 0.1)
-    
-    return cost, t
     """
 
     # Generate n evenly spaced points along the edge
@@ -67,7 +41,7 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     dist = np.linalg.norm(b - a)
     cost = simpson(costs, ts) * dist
     
-    return cost, 0.5
+    return cost
     
 def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: float, y_length: float, start_coord: float, end_coord: float):
     """Computing the weighted graph from the voronoi diagram
@@ -87,28 +61,25 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     # start_idx: starting ridge_point idx
     # end_idx: ending ridge_point idx
     # cost: the cost of crossing this edge
-    # t: if t in [0, 1] the middle point lies between the ridge points else it is outside (debugging purpose)
     # x_coord: of the middle_point (debugging purpose)
     # y_coord: of the middle_point (debugging purpose)
     middle_points = []
     for i, ridge_point in enumerate(vor.ridge_points):        
-        # go through all the ridge_points with atleast one being inside the boundary
+        # go through all the ridge_points inside and on the rectangle field
         if not (ridge_point[0] >= n_obst and ridge_point[1] >= n_obst):
             assert vor.ridge_vertices[i][0] != -1, "Somehow, this vertex has only one voronoi node. Should not happen with Jonah's mirroring technique!"
             
-            middle_point = np.empty((6))
+            middle_point = np.empty((5))
 
             middle_point[0:2] = vor.ridge_vertices[i]
             
-            middle_point[2:4] = cost_function(vor.vertices[vor.ridge_vertices[i][0]], vor.vertices[vor.ridge_vertices[i][1]], obst_coord[ridge_point[0]], obst_coord[ridge_point[1]])
-            middle_point[4:6] = np.array(obst_coord[ridge_point[0]] + obst_coord[ridge_point[1]])/2
+            middle_point[2] = cost_function(vor.vertices[vor.ridge_vertices[i][0]], vor.vertices[vor.ridge_vertices[i][1]], obst_coord[ridge_point[0]], obst_coord[ridge_point[1]])
+            middle_point[3:] = np.array(obst_coord[ridge_point[0]] + obst_coord[ridge_point[1]])/2
             
             middle_points.append(middle_point)
             
             
     middle_points = np.array(middle_points)
-    
-    #print(middle_points)
     
     # Next step: store everything into a weightes CSR graph file
     
@@ -151,8 +122,8 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
         # O(n) cost of searching this idx in all_idx
         i = np.where(all_idx == middle_point[0])[0][0]
         j = np.where(all_idx == middle_point[1])[0][0]
-        cost = middle_point[2]
-        graph[i,j] = cost
+        
+        graph[i,j] = middle_point[2]
     
     return csr_matrix(graph), all_idx
             
