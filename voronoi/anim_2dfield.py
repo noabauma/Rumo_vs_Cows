@@ -116,9 +116,9 @@ class TwoDField_Vor(MovingCameraScene):
             vor_vertices_all.add(dot)
 
         
-        vor_vertices_og.set_z_index(0)
-        vor_vertices_b.set_z_index(0)
-        vor_vertices_all.set_z_index(0)
+        vor_vertices_og.set_z_index(-2)
+        vor_vertices_b.set_z_index(-2)
+        vor_vertices_all.set_z_index(-2)
 
         # Animate
         self.play(Create(rect))
@@ -190,7 +190,7 @@ class TwoDField_Vor(MovingCameraScene):
         self.play(FadeOut(vor_vertices_og, lines, vor_vertices_b, lines_b))
         self.wait()
         
-        group_og = VGroup(rect, cows)#, vor_vertices_og, lines, lines_b)
+        group_og = VGroup(rect, cows)
         group_og_v = VGroup(vor_vertices_og, lines, lines_b)
         
         # Up
@@ -225,7 +225,6 @@ class TwoDField_Vor(MovingCameraScene):
         
         
         self.play(self.camera.frame.animate.move_to(rect).scale(3), FadeOut(visible_subset))
-        self.camera.frame.save_state()
         
         # Left
         mirror_l = group_og.copy()
@@ -286,8 +285,20 @@ class TwoDField_Vor(MovingCameraScene):
         self.play(Indicate(vor_vertices_b))
         self.wait()
         
+        lines.set_color(BLUE)
+        lines_b.set_color(BLUE)
+        
+        self.play(FadeOut(vor_vertices_all, lines_all, mirror_u_v, mirror_u, mirror_d, mirror_l, mirror_r, mirror_dl, mirror_dr, mirror_ul, mirror_ur))
+        self.wait()
+        
         # TODO: zoom in to one line and show cost of it
-        rect_tmp = Rectangle().move_to()
+        rect_domain = [x_length/3, y_length/3, [2/5*x_length, 2/5*y_length, 0]]
+        rect_tmp = Rectangle(width=rect_domain[0], height=rect_domain[1]).move_to(rect_domain[2])
+        self.play(Create(rect_tmp))
+        self.wait()
+        self.camera.frame.save_state()
+        self.play(self.camera.frame.animate.move_to([2/5*x_length, 2/5*y_length, 0]).scale(1/5))
+        self.wait()
         
         """
         # Move out again to show the while field        
@@ -299,15 +310,16 @@ class TwoDField_Vor(MovingCameraScene):
         
         # Save the state of camera
         self.camera.frame.save_state()
+        """
         
         
         
         # TODO: Draw the shortest path
         path_lines = VGroup()
         for i, j in zip(path[:-1], path[1:]):
-            p1 = [grid_points[i, 0], grid_points[i, 1], 0]
-            p2 = [grid_points[j, 0], grid_points[j, 1], 0]
-            line = Line(p1, p2, color=WHITE, stroke_width=10)
+            p1 = [vor.vertices[all_idx[i], 0], vor.vertices[all_idx[i], 1], 0]
+            p2 = [vor.vertices[all_idx[j], 0], vor.vertices[all_idx[j], 1], 0]
+            line = Line(p1, p2, color=GREEN, stroke_width=10)
             path_lines.add(line)
         
         path_lines.set_z_index(2)
@@ -315,4 +327,3 @@ class TwoDField_Vor(MovingCameraScene):
         # Animate the path drawing
         self.play(Create(path_lines), run_time=3)
         self.wait()
-        """
