@@ -11,6 +11,24 @@ class Cross(VGroup):
         line2 = Line((DOWN + LEFT) * size, (UP + RIGHT) * size, color=color, stroke_width=stroke_width, **kwargs)
         super().__init__(line1, line2)
         self.move_to(point)
+        
+def is_inside_rect(point, rect: Rectangle):
+    center = rect.get_center()
+    half_w = rect.width / 2
+    half_h = rect.height / 2
+
+    x_min, x_max = center[0] - half_w, center[0] + half_w
+    y_min, y_max = center[1] - half_h, center[1] + half_h
+
+    return (
+        x_min <= point[0] <= x_max and
+        y_min <= point[1] <= y_max
+    )
+    
+def sigmoid_strengthen(x: float, alpha: float = 1.0):
+    # alpha = 1/n with n in {1,3,5,7,...}
+    return -0.5*(np.cos(x*np.pi)**alpha) + 0.5
+
 
 class TwoDField_Vor(MovingCameraScene):        
     def construct(self):
@@ -77,10 +95,17 @@ class TwoDField_Vor(MovingCameraScene):
 
         path.append(0)
         path = path[::-1]  # Reverse the path to get it from source to destination
+        
+        
         ##### Step 5 manim the shit out of it!
         
         # At the border (i.e. Rectangle)
         rect = Rectangle(width=x_length, height=y_length).move_to(x_length/2*RIGHT+y_length/2*UP)
+        
+        # This Rect is for later to show the cost of one edge
+        rect_domain = [x_length/3, y_length/3, [2/5*x_length, 2/5*y_length, 0]]
+        rect_tmp = Rectangle(width=rect_domain[0], height=rect_domain[1]).move_to(rect_domain[2])
+        
         
         # Move the camera to the rectangle
         margin = max(x_length, y_length)*0.1
@@ -138,9 +163,13 @@ class TwoDField_Vor(MovingCameraScene):
         lines = VGroup()
         lines_b = VGroup()
         lines_all = VGroup()
+        the_points = []
 
-        for i, j in vor.ridge_vertices:
+        for idx, ridge_point in enumerate(vor.ridge_points): 
             #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
+            
+            i = vor.ridge_vertices[idx][0]
+            j = vor.ridge_vertices[idx][1]
             
             if i == -1 or j == -1:
                 continue
@@ -165,6 +194,10 @@ class TwoDField_Vor(MovingCameraScene):
                 )
                 lines_b.add(line)
                 
+            if is_inside_rect(a, rect_tmp) and is_inside_rect(b, rect_tmp):
+                assert len(the_points) == 0, "This list should be empty! Only one line should exist inside this rect!"
+                the_points = [a, b, obst_coord[ridge_point[0]], obst_coord[ridge_point[1]], cost_function(a, b, obst_coord[ridge_point[0]], obst_coord[ridge_point[1]])]
+                
             line = Line(
                 [a[0], a[1], 0],
                 [b[0], b[1], 0],
@@ -172,6 +205,8 @@ class TwoDField_Vor(MovingCameraScene):
                 color=BLUE # interpolate_color(BLUE, RED, weight)
             )
             lines_all.add(line)
+            
+        assert len(the_points) > 0, "This list should not be empty! Only one line should exist inside this rect!"
                 
         lines.set_z_index(-1)
         lines_b.set_z_index(-1)
@@ -291,14 +326,54 @@ class TwoDField_Vor(MovingCameraScene):
         self.play(FadeOut(vor_vertices_all, lines_all, mirror_u_v, mirror_u, mirror_d, mirror_l, mirror_r, mirror_dl, mirror_dr, mirror_ul, mirror_ur))
         self.wait()
         
-        # TODO: zoom in to one line and show cost of it
-        rect_domain = [x_length/3, y_length/3, [2/5*x_length, 2/5*y_length, 0]]
-        rect_tmp = Rectangle(width=rect_domain[0], height=rect_domain[1]).move_to(rect_domain[2])
-        self.play(Create(rect_tmp))
-        self.wait()
+        # TODO: Zoom in to one line and show cost of it
+        # self.play(Create(rect_tmp))
+        # self.wait()
         self.camera.frame.save_state()
-        self.play(self.camera.frame.animate.move_to([2/5*x_length, 2/5*y_length, 0]).scale(1/5))
+        self.play(self.camera.frame.animate.move_to([2/5*x_length, 2/5*y_length, 0]).scale(3/10))
         self.wait()
+        
+        
+        n = 10
+        ts = np.linspace(0, 1, n)
+        a  = the_points[0]
+        b  = the_points[1]
+        c1 = the_points[2]
+        points = a[None, :] + ts[:, None] * (b - a)[None, :]  # shape (n, 2)
+        
+        # Compute cost at each sampled point (adjust your cost logic as needed)
+        crit_dist = 10
+        costs = np.maximum(1 - np.linalg.norm(points - c1, axis=1) / crit_dist, 0.1)
+        
+        discrete_points = VGroup()
+        discrete_labels = VGroup()
+        for i, point in enumerate(points):
+            
+            dot = Dot(point=[point[0], point[1], 0], radius=0.2, color=interpolate_color(BLUE, ORANGE, alpha=costs[i]))
+            discrete_points.add(dot)
+            
+            label = DecimalNumber(
+                        costs[i],
+                        num_decimal_places=2,
+                        font_size=20
+                    ).move_to(dot.get_center() + 0.25*(UP+LEFT))
+            discrete_labels.add(label)
+            
+        the_label =  DecimalNumber(
+                        the_points[4],
+                        num_decimal_places=2,
+                        font_size=30
+                    ).move_to(np.append((a+b)*0.5, 0) + 0.25*(UP+LEFT))   
+        
+        self.play(FadeIn(discrete_points))
+        self.wait()
+        
+        self.play(Create(discrete_labels))
+        self.wait()
+        
+        self.play(FadeOut(discrete_labels, discrete_points), Create(the_label))
+        self.wait()
+        
         
         """
         # Move out again to show the while field        
@@ -312,14 +387,15 @@ class TwoDField_Vor(MovingCameraScene):
         self.camera.frame.save_state()
         """
         
-        
+        self.play(FadeOut(the_label), self.camera.frame.animate.restore(), run_time=2)
+        self.wait()
         
         # TODO: Draw the shortest path
         path_lines = VGroup()
         for i, j in zip(path[:-1], path[1:]):
             p1 = [vor.vertices[all_idx[i], 0], vor.vertices[all_idx[i], 1], 0]
             p2 = [vor.vertices[all_idx[j], 0], vor.vertices[all_idx[j], 1], 0]
-            line = Line(p1, p2, color=GREEN, stroke_width=10)
+            line = Line(p1, p2, color=PURE_GREEN, stroke_width=11)
             path_lines.add(line)
         
         path_lines.set_z_index(2)
