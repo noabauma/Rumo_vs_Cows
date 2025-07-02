@@ -77,7 +77,7 @@ class Graph_Formula(MovingCameraScene):
             r"\text{cost}(r, c_i) = \max\left(1 - \frac{\|r - c_i\|_2}{\text{crit}},\ 0.1\right)"
         )
         eq2 = MathTex(
-            r"\text{Cost}(r) = \max_{i \in \{1, \ldots, N\}} \text{cost}(r, c_i)"
+            r"\text{Cost}(r) = \max_{i \in \{1, \ldots, n\}} \text{cost}(r, c_i)"
         )
 
         eqs = VGroup(eq1, eq2).arrange(2*DOWN, buff=0.4).scale(0.9)
@@ -93,5 +93,82 @@ class Graph_Formula(MovingCameraScene):
         self.wait(2)
 
         # TODO: Compute the complexity
+        
+        # Discrete:
+        # build_field + compute_heatmap + compute_graph + shortest_path
+        # O(n)        + O(n)            + O(mn)         + O[n*k + n*log(n)] = O(nlogn)
+        
+        # Voronoi:
+        # build_field + compute_voronoi + compute_weights + shortest_path
+        # O(n)        + O(nlogn)        + O(mn)           + O[n*k + n*log(n)] = O(nlogn)
+        
+        # Voronoi_Union
+        # build_field + compute_voronoi + compute_weights + sort_edges + union_find  + BFS
+        # O(n)        + O(nlogn)        + O(mn)           + O(nlogn)   + O(alpha(n)) + O(kn) = O(nlogn)
+        
+        title = Text("Algorithm Complexity Comparison", font_size=40).to_edge(UP)
+        
+        # Show final heading and equations
+        self.play(self.camera.frame.animate.move_to(title))
+        self.wait()
+        
+        self.play(FadeIn(title))
+
+        # --- Discrete ---
+        discrete_steps = VGroup(
+            MathTex(r"\textbf{Discrete:}"),
+            MathTex(r"\text{build\_field: } O(n)"),
+            MathTex(r"\text{compute\_heatmap: } O(n)"),
+            MathTex(r"\text{compute\_graph: } O(mn)"),
+            MathTex(r"\text{shortest\_path: } O(nk + n \log n)"),
+            MathTex(r"\text{Total: } O(n \log n)")
+        ).arrange(DOWN, aligned_edge=LEFT).scale(0.7).to_corner(UL)
+
+        # --- Voronoi ---
+        voronoi_steps = VGroup(
+            MathTex(r"\textbf{Voronoi:}"),
+            MathTex(r"\text{build\_field: } O(n)"),
+            MathTex(r"\text{compute\_voronoi: } O(n \log n)"),
+            MathTex(r"\text{compute\_weights: } O(mn)"),
+            MathTex(r"\text{shortest\_path: } O(nk + n \log n)"),
+            MathTex(r"\text{Total: } O(n \log n)")
+        ).arrange(DOWN, aligned_edge=LEFT).scale(0.7).next_to(discrete_steps, RIGHT, buff=1.5)
+
+        # --- Voronoi Union ---
+        union_steps = VGroup(
+            MathTex(r"\textbf{Voronoi Union:}"),
+            MathTex(r"\text{build\_field: } O(n)"),
+            MathTex(r"\text{compute\_voronoi: } O(n \log n)"),
+            MathTex(r"\text{compute\_weights: } O(mn)"),
+            MathTex(r"\text{sort\_edges: } O(n \log n)"),
+            MathTex(r"\text{union\_find: } O(\alpha(n))"),
+            MathTex(r"\text{BFS: } O(kn)"),
+            MathTex(r"\text{Total: } O(n \log n)")
+        ).arrange(DOWN, aligned_edge=LEFT).scale(0.7).next_to(voronoi_steps, RIGHT, buff=1.5)
+
+        # Animate Discrete steps
+        for step in discrete_steps:
+            self.play(FadeIn(step), run_time=0.4)
+
+        self.wait(0.5)
+
+        # Animate Voronoi steps
+        for step in voronoi_steps:
+            self.play(FadeIn(step), run_time=0.4)
+
+        self.wait(0.5)
+
+        # Animate Voronoi Union steps
+        for step in union_steps:
+            self.play(FadeIn(step), run_time=0.3)
+
+        self.wait(1)
+
+        # Emphasize the "Total" rows
+        for group in [discrete_steps, voronoi_steps, union_steps]:
+            total_line = group[-1]
+            self.play(total_line.animate.set_color(YELLOW).scale(1.1))
+
+        self.wait(2)
         
         # TODO: Add a 3 visualization of the cost function

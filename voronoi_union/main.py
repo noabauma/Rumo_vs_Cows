@@ -4,6 +4,7 @@ from collections import defaultdict, deque
 import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from scipy.sparse import csr_matrix
+from scipy.integrate import simpson
 
 """
 This code computes the problem of Rumo having to pass a field with n cows.
@@ -42,18 +43,7 @@ class UnionFind:
         self.parent[ir] = jr
 
         return True
-    
-        """
-        # Representative of set containing i
-        xrep = self.find(x)
-        
-        # Representative of set containing j
-        yrep = self.find(y)
-        
-        # Make the representative of i's set
-        # be the representative of j's set
-        self.parent[xrep] = yrep
-        """
+
 
 def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     """Cost function to determine the cost of crossing this edge
@@ -67,22 +57,21 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     Returns:
         cost (float): The cost of crossing this edge
     """
-    
-    m = (c1 + c2)/2 # middle_point
-    
-    # now we have to check if the middle_point m between is actually on the vertex.
-    # If not, the point (a or b) which is the closest to the cow will be the cost of crossing the edge
 
-    # If t in [0, 1]: m is in between, if t in (-inf, 0): m closer to a and if t in (1, inf): closer to b
+    # Generate n evenly spaced points along the edge
+    n = 10
+    ts = np.linspace(0, 1, n)
+    points = a[None, :] + ts[:, None] * (b - a)[None, :]  # shape (n, 2)
+
+    # Compute cost at each sampled point (adjust your cost logic as needed)
+    crit_dist = 10
+    costs = np.maximum(1 - np.linalg.norm(points - c1, axis=1) / crit_dist, 0.1)
+
+    # Scale by arc length of the edge (distance from a to b)
+    dist = np.linalg.norm(b - a)
+    cost = simpson(costs, ts) * dist
     
-    t = np.dot(b - a, m - a)/np.dot(b - a, b - a)
-    
-    if 0 <= t <= 1:
-        return np.linalg.norm(c1 - m), t
-    elif t < 0:
-        return np.linalg.norm(c1 - a), t
-    else:
-        return np.linalg.norm(c1 - b), t
+    return cost
     
 def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: float, y_length: float, start_coord: float, end_coord: float):
     """Computing the weighted graph from the voronoi diagram
@@ -111,12 +100,12 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
         if not (ridge_point[0] >= n_obst and ridge_point[1] >= n_obst):
             assert vor.ridge_vertices[i][0] != -1, "Somehow, this vertex has only one voronoi node. Should not happen with Jonah's mirroring technique!"
             
-            middle_point = np.empty((6))
+            middle_point = np.empty((5))
 
             middle_point[0:2] = vor.ridge_vertices[i]
             
-            middle_point[2:4] = cost_function(vor.vertices[vor.ridge_vertices[i][0]], vor.vertices[vor.ridge_vertices[i][1]], obst_coord[ridge_point[0]], obst_coord[ridge_point[1]])
-            middle_point[4:6] = np.array(obst_coord[ridge_point[0]] + obst_coord[ridge_point[1]])/2
+            middle_point[2] = cost_function(vor.vertices[vor.ridge_vertices[i][0]], vor.vertices[vor.ridge_vertices[i][1]], obst_coord[ridge_point[0]], obst_coord[ridge_point[1]])
+            middle_point[3:] = np.array(obst_coord[ridge_point[0]] + obst_coord[ridge_point[1]])/2
             
             middle_points.append(middle_point)
             
