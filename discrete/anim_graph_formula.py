@@ -106,45 +106,45 @@ class Graph_Formula(MovingCameraScene):
         # build_field + compute_voronoi + compute_weights + sort_edges + union_find  + BFS
         # O(n)        + O(nlogn)        + O(mn)           + O(nlogn)   + O(alpha(n)) + O(kn) = O(nlogn)
         
-        title = Text("Algorithm Complexity Comparison", font_size=40).to_edge(UP)
-        
-        # Show final heading and equations
-        self.play(self.camera.frame.animate.move_to(title))
-        self.wait()
+        title = Text("Algorithm Complexity Comparison", font_size=40).move_to(UP*20)
         
         self.play(FadeIn(title))
 
         # --- Discrete ---
         discrete_steps = VGroup(
-            MathTex(r"\textbf{Discrete:}"),
-            MathTex(r"\text{build\_field: } O(n)"),
-            MathTex(r"\text{compute\_heatmap: } O(n)"),
-            MathTex(r"\text{compute\_graph: } O(mn)"),
-            MathTex(r"\text{shortest\_path: } O(nk + n \log n)"),
-            MathTex(r"\text{Total: } O(n \log n)")
-        ).arrange(DOWN, aligned_edge=LEFT).scale(0.7).to_corner(UL)
+            MathTex(r"\underbrace{}_{text{Discrete}}"),
+            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build\_field}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{compute\_heatmap}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(mn)}_{\text{compute\_graph}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(nk + n \log n)}_{\text{shortest\_path}} = "),
+            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
+        ).arrange(3*RIGHT, aligned_edge=RIGHT).scale(0.7).to_corner(UL)
 
         # --- Voronoi ---
         voronoi_steps = VGroup(
             MathTex(r"\textbf{Voronoi:}"),
-            MathTex(r"\text{build\_field: } O(n)"),
-            MathTex(r"\text{compute\_voronoi: } O(n \log n)"),
-            MathTex(r"\text{compute\_weights: } O(mn)"),
-            MathTex(r"\text{shortest\_path: } O(nk + n \log n)"),
-            MathTex(r"\text{Total: } O(n \log n)")
-        ).arrange(DOWN, aligned_edge=LEFT).scale(0.7).next_to(discrete_steps, RIGHT, buff=1.5)
+            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build\_field}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{compute\_voronoi}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(mn)}_{\text{compute\_weights}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(nk + n \log n)}_{\text{shortest\_path}} = "),
+            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
+        ).arrange(3*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(discrete_steps, 0.5*DOWN, buff=1.5)
 
         # --- Voronoi Union ---
         union_steps = VGroup(
             MathTex(r"\textbf{Voronoi Union:}"),
-            MathTex(r"\text{build\_field: } O(n)"),
-            MathTex(r"\text{compute\_voronoi: } O(n \log n)"),
-            MathTex(r"\text{compute\_weights: } O(mn)"),
-            MathTex(r"\text{sort\_edges: } O(n \log n)"),
-            MathTex(r"\text{union\_find: } O(\alpha(n))"),
-            MathTex(r"\text{BFS: } O(kn)"),
-            MathTex(r"\text{Total: } O(n \log n)")
-        ).arrange(DOWN, aligned_edge=LEFT).scale(0.7).next_to(voronoi_steps, RIGHT, buff=1.5)
+            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build\_field}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{compute\_voronoi}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(mn)}_{\text{compute\_weights}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{sort\_edges}} + "),
+            MathTex(r"\underbrace{\mathcal{O}\alpha(n)}_{\text{union\_find}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{BFS}} = "),
+            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
+        ).arrange(3*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(voronoi_steps, 0.5*DOWN, buff=1.5)
+
+        # Show final heading and equations
+        self.play(self.camera.frame.animate.move_to(discrete_steps))
+        self.wait()
 
         # Animate Discrete steps
         for step in discrete_steps:
@@ -171,4 +171,8 @@ class Graph_Formula(MovingCameraScene):
 
         self.wait(2)
         
-        # TODO: Add a 3 visualization of the cost function
+        # TODO: Quote the thing what Raphael said
+        quote1 = MathTex("Find a path from A to B such that the \textbf{sum of all edge weights is minimized}.")
+        quote2 = MathTex("Find a path from A to B such that the \textbf{maximum edge weight along the path is minimized}.")
+        
+        # TODO: Add a 3d visualization of the cost function

@@ -92,17 +92,19 @@ class TwoDField_Vor_UF(MovingCameraScene):
         
         ##### Step 5 manim the shit out of it!
         
-        # At the border (i.e. Rectangle)
-        rect = Rectangle(width=x_length, height=y_length).move_to(x_length/2*RIGHT+y_length/2*UP)
-        
-        # This Rect is for later to show the cost of one edge
-        rect_domain = [x_length/3, y_length/3, [2/5*x_length, 2/5*y_length, 0]]
+        # Create border rectangle instantly
+        rect = Rectangle(width=x_length, height=y_length).move_to(x_length/2 * RIGHT + y_length/2 * UP)
+        self.add(rect)  # Show immediately
+
+        # Create a domain subrectangle (for cost display later)
+        rect_domain = [x_length / 3, y_length / 3, [2/5 * x_length, 2/5 * y_length, 0]]
         rect_tmp = Rectangle(width=rect_domain[0], height=rect_domain[1]).move_to(rect_domain[2])
-        
-        
-        # Move the camera to the rectangle
-        margin = max(x_length, y_length)*0.1
-        self.play(self.camera.frame.animate.move_to(rect).set(width=x_length + margin, height=y_length + margin))
+
+        # Instantly set the camera view to the outer rectangle
+        margin = max(x_length, y_length) * 0.1
+        self.camera.frame.move_to(rect)
+        self.camera.frame.set(width=x_length + margin, height=y_length + margin)
+
         
         # Save the state of camera
         self.camera.frame.save_state()
