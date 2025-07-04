@@ -111,18 +111,19 @@ class Graph_Formula(MovingCameraScene):
         self.play(FadeIn(title))
 
         # --- Discrete ---
+        # dicrete_text = Text(Discrete:)
         discrete_steps = VGroup(
-            MathTex(r"\underbrace{}_{text{Discrete}}"),
+            #MathTex(r"\textbf{Discrete:}"),
             MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build\_field}} + "),
             MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{compute\_heatmap}} + "),
             MathTex(r"\underbrace{\mathcal{O}(mn)}_{\text{compute\_graph}} + "),
             MathTex(r"\underbrace{\mathcal{O}(nk + n \log n)}_{\text{shortest\_path}} = "),
             MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
-        ).arrange(3*RIGHT, aligned_edge=RIGHT).scale(0.7).to_corner(UL)
+        ).arrange(3*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(title, 2*DOWN, buff=0.3)
 
         # --- Voronoi ---
         voronoi_steps = VGroup(
-            MathTex(r"\textbf{Voronoi:}"),
+            #MathTex(r"\textbf{Voronoi:}"),
             MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build\_field}} + "),
             MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{compute\_voronoi}} + "),
             MathTex(r"\underbrace{\mathcal{O}(mn)}_{\text{compute\_weights}} + "),
@@ -132,7 +133,7 @@ class Graph_Formula(MovingCameraScene):
 
         # --- Voronoi Union ---
         union_steps = VGroup(
-            MathTex(r"\textbf{Voronoi Union:}"),
+            #MathTex(r"\textbf{Voronoi Union:}"),
             MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build\_field}} + "),
             MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{compute\_voronoi}} + "),
             MathTex(r"\underbrace{\mathcal{O}(mn)}_{\text{compute\_weights}} + "),
@@ -143,7 +144,7 @@ class Graph_Formula(MovingCameraScene):
         ).arrange(3*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(voronoi_steps, 0.5*DOWN, buff=1.5)
 
         # Show final heading and equations
-        self.play(self.camera.frame.animate.move_to(discrete_steps))
+        self.play(self.camera.frame.animate.move_to((discrete_steps.get_center() + voronoi_steps.get_center())*0.5))
         self.wait()
 
         # Animate Discrete steps
@@ -172,7 +173,20 @@ class Graph_Formula(MovingCameraScene):
         self.wait(2)
         
         # TODO: Quote the thing what Raphael said
-        quote1 = MathTex("Find a path from A to B such that the \textbf{sum of all edge weights is minimized}.")
-        quote2 = MathTex("Find a path from A to B such that the \textbf{maximum edge weight along the path is minimized}.")
+        quote1 = Paragraph(
+                    "Find a path from A to B such that the\n"
+                    "sum of all edge weights is minimized.",
+                    alignment="center", font_size=35, t2w={'sum of all edge weights is minimized':BOLD}).move_to(UP*30)
+        quote2 = Paragraph("Find a path from A to B such that the\n"
+                      "maximum edge weight along the path is minimized.", 
+                      alignment="center", font_size=35, t2w={'maximum edge weight along the path is minimized':BOLD}).move_to(UP*28)
+        
+        self.play(self.camera.frame.animate.move_to((quote1.get_center() + quote2.get_center())*0.5))
+        self.wait()
+        
+        self.play(FadeIn(quote1))
+        self.wait()
+        self.play(FadeIn(quote2))
+        self.wait()
         
         # TODO: Add a 3d visualization of the cost function
