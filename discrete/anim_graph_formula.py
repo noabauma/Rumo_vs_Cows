@@ -111,41 +111,43 @@ class Graph_Formula(MovingCameraScene):
         self.play(FadeIn(title))
 
         # --- Discrete ---
-        # dicrete_text = Text(Discrete:)
+        discrete_label = Text("Discrete:", font_size=20).next_to(title, 1*DOWN, buff=0.3)
         discrete_steps = VGroup(
-            #MathTex(r"\textbf{Discrete:}"),
-            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build\_field}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{compute\_heatmap}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(mn)}_{\text{compute\_graph}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(nk + n \log n)}_{\text{shortest\_path}} = "),
+            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{compute heatmap}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{compute graph}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n + n \log n)}_{\text{shortest path}} = "),
             MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
-        ).arrange(3*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(title, 2*DOWN, buff=0.3)
+        ).arrange(2*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(discrete_label, 0.5*DOWN, buff=0.3)
 
         # --- Voronoi ---
+        voronoi_label = Text("Voronoi:", font_size=20).next_to(discrete_steps, 0.5*DOWN, buff=1.5)
         voronoi_steps = VGroup(
-            #MathTex(r"\textbf{Voronoi:}"),
-            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build\_field}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{compute\_voronoi}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(mn)}_{\text{compute\_weights}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(nk + n \log n)}_{\text{shortest\_path}} = "),
+            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{compute voronoi}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{compute weights}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(kn + n \log n)}_{\text{shortest path}} = "),
             MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
-        ).arrange(3*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(discrete_steps, 0.5*DOWN, buff=1.5)
+        ).arrange(2*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(voronoi_label, 0.25*DOWN, buff=1.5)
 
         # --- Voronoi Union ---
+        union_label = Text("Voronoi Union:", font_size=20).next_to(voronoi_steps, 0.5*DOWN, buff=1.5)
         union_steps = VGroup(
-            #MathTex(r"\textbf{Voronoi Union:}"),
-            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build\_field}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{compute\_voronoi}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(mn)}_{\text{compute\_weights}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{sort\_edges}} + "),
-            MathTex(r"\underbrace{\mathcal{O}\alpha(n)}_{\text{union\_find}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{compute voronoi}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{compute weights}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{sort edges}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(\alpha(n))}_{\text{union find}} + "),
             MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{BFS}} = "),
             MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
-        ).arrange(3*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(voronoi_steps, 0.5*DOWN, buff=1.5)
+        ).arrange(2*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(union_label, 0.25*DOWN, buff=1.5)
 
         # Show final heading and equations
         self.play(self.camera.frame.animate.move_to((discrete_steps.get_center() + voronoi_steps.get_center())*0.5))
         self.wait()
+        
+        all_labels = VGroup(discrete_label, voronoi_label, union_label)
+        self.play(FadeIn(all_labels))
 
         # Animate Discrete steps
         for step in discrete_steps:

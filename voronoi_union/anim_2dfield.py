@@ -129,7 +129,7 @@ class TwoDField_Vor_UF(MovingCameraScene):
                 vor_vertices_og.add(dot)
                 
             elif (-1e-6 < x < x_length + 1e-6) and (-1e-6 < y < y_length + 1e-6):
-                dot = Dot(point=[x, y, 0], radius=0.2, color=ORANGE)
+                dot = Dot(point=[x, y, 0], radius=0.2, color=BLUE)
                 vor_vertices_b.add(dot)
                 
             dot = Dot(point=[x, y, 0], radius=0.2, color=BLUE)
@@ -139,19 +139,15 @@ class TwoDField_Vor_UF(MovingCameraScene):
         vor_vertices_og.set_z_index(-2)
         vor_vertices_b.set_z_index(-2)
         vor_vertices_all.set_z_index(-2)
-
-        # Animate
-        self.play(Create(rect))
-        self.play(LaggedStartMap(FadeIn, cows, lag_ratio=0.05))
+        
+        self.add(vor_vertices_og, vor_vertices_b)
+        self.add(cows)
         
         # Draw the starting and end point
         start_point = Circle(color=WHITE, fill_opacity=1).scale(0.6).move_to([vor.vertices[all_idx[0], 0], vor.vertices[all_idx[0], 1], 0])
         end_point = Star(color=WHITE, fill_opacity=1).scale(0.6).move_to([vor.vertices[all_idx[-1], 0], vor.vertices[all_idx[-1], 1], 0])
 
-        self.play(Indicate(start_point, color=WHITE))
-        self.wait()
-        self.play(Indicate(end_point, color=WHITE))
-        self.wait()
+        self.add(start_point, end_point)
         
         # Now adding the edges (with labels)
         
@@ -206,6 +202,8 @@ class TwoDField_Vor_UF(MovingCameraScene):
         lines.set_z_index(-1)
         lines_b.set_z_index(-1)
         lines_all.set_z_index(-1)
+        
+        self.add(lines, lines_b)
         
         # TODO: Draw the shortest path
         path_lines = VGroup()
