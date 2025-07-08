@@ -57,19 +57,8 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     Returns:
         cost (float): The cost of crossing this edge
     """
-
-    # Generate n evenly spaced points along the edge
-    n = 10
-    ts = np.linspace(0, 1, n)
-    points = a[None, :] + ts[:, None] * (b - a)[None, :]  # shape (n, 2)
-
-    # Compute cost at each sampled point (adjust your cost logic as needed)
-    crit_dist = 10
-    costs = np.maximum(1 - np.linalg.norm(points - c1, axis=1) / crit_dist, 0.1)
-
-    # Scale by arc length of the edge (distance from a to b)
-    dist = np.linalg.norm(b - a)
-    cost = simpson(costs, ts) * dist
+    # This time the cost function is the distance between the cow and the path
+    cost = np.linalg.norm(c1 - c2)*0.5
     
     return cost
     
@@ -152,12 +141,15 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
 
 
 def union_find_optimal_path(vor: Voronoi, middle_points: np.array, all_idx: np.array):
-    """AI is creating summary for union_find_optimal_path
+    """Union Find algorithm in finding the optimal path
 
     Args:
-        middle_points (np.array): [description]
-        all_idx (np.array): [description]
+        middle_points (np.array): Array of the x,y coordinate as well as the cost of each edge
+        all_idx (np.array): the actual node indeces of the voronoi mesh
     """
+    # We create a mapping between indeces {0, n-1} and the real all_idx for O(1) lookup time
+    idx_map = {val: idx for idx, val in enumerate(all_idx)}
+    
     n_nodes = len(all_idx)
     uf = UnionFind(n_nodes)
     graph = defaultdict(list)
@@ -180,8 +172,8 @@ def union_find_optimal_path(vor: Voronoi, middle_points: np.array, all_idx: np.a
         # time.sleep(0.05)
         # fig.savefig(f"frame_{edge_idx:03d}.png")
         
-        i = np.where(all_idx == i)[0][0]    # TODO: this is expensive to always check and costs O(n), do transform the nodes first and retransform back
-        j = np.where(all_idx == j)[0][0]
+        i = idx_map[i]
+        j = idx_map[j]
         
         uf.union(i, j)
             
@@ -193,18 +185,19 @@ def union_find_optimal_path(vor: Voronoi, middle_points: np.array, all_idx: np.a
         assert edge_idx != n_edges, f"We did not find a path! (Impossible?!) {edge_idx} == {n_edges}"
     
     
-    # Building the path from Union Find (BFS)
+    # Building the path from Union Find (DFS)
     visited = set()
-    queue = deque([(0, [0])])
+    stack = [(0, [0])]  # (current_node, path_so_far)
 
-    while queue:
-        node, path = queue.popleft()
-        if node == n_nodes-1:
-            break
-        visited.add(node)
-        for neighbor in graph[node]:
-            if neighbor not in visited:
-                queue.append((neighbor, path + [neighbor]))
+    while stack:
+        node, path = stack.pop()
+        if node == n_nodes - 1:
+            break  # found target node
+        if node not in visited:
+            visited.add(node)
+            for neighbor in reversed(graph[node]):  # reverse to maintain similar order to BFS
+                if neighbor not in visited:
+                    stack.append((neighbor, path + [neighbor]))
     
     return path
     
@@ -306,8 +299,7 @@ def main():
     y_coords = vor.vertices[all_idx[path], 1]
     plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
     
-    #colors = ['green' if (0.0 < t < 1.0) else 'red' for t in middle_points[:,3]]
-    #plt.scatter(middle_points[:,4], middle_points[:,5], c=colors, s=50, edgecolors='black')
+    #plt.scatter(middle_points[:,3], middle_points[:,4], s=50, edgecolors='black')
 
     plt.xlabel('X Axis')
     plt.ylabel('Y Axis')

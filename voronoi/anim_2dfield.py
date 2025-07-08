@@ -390,7 +390,7 @@ class TwoDField_Vor(MovingCameraScene):
         self.play(FadeOut(the_label), self.camera.frame.animate.restore(), run_time=2)
         self.wait()
         
-        # TODO: Draw the shortest path
+        # Draw the shortest path
         path_lines = VGroup()
         for i, j in zip(path[:-1], path[1:]):
             p1 = [vor.vertices[all_idx[i], 0], vor.vertices[all_idx[i], 1], 0]

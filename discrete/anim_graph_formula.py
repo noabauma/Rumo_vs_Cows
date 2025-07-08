@@ -143,7 +143,7 @@ class Graph_Formula(MovingCameraScene):
         ).arrange(2*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(union_label, 0.25*DOWN, buff=1.5)
 
         # Show final heading and equations
-        self.play(self.camera.frame.animate.move_to((discrete_steps.get_center() + voronoi_steps.get_center())*0.5))
+        self.play(self.camera.frame.animate.move_to(voronoi_label))
         self.wait()
         
         all_labels = VGroup(discrete_label, voronoi_label, union_label)

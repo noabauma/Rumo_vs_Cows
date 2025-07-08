@@ -24,10 +24,6 @@ def is_inside_rect(point, rect: Rectangle):
         x_min <= point[0] <= x_max and
         y_min <= point[1] <= y_max
     )
-    
-def sigmoid_strengthen(x: float, alpha: float = 1.0):
-    # alpha = 1/n with n in {1,3,5,7,...}
-    return -0.5*(np.cos(x*np.pi)**alpha) + 0.5
 
 
 class TwoDField_Vor_UF(MovingCameraScene):        
@@ -181,7 +177,7 @@ class TwoDField_Vor_UF(MovingCameraScene):
                     [a[0], a[1], 0],
                     [b[0], b[1], 0],
                     stroke_width=4,
-                    color=ORANGE # interpolate_color(BLUE, RED, weight)
+                    color=BLUE # interpolate_color(BLUE, RED, weight)
                 )
                 lines_b.add(line)
                 
@@ -203,9 +199,11 @@ class TwoDField_Vor_UF(MovingCameraScene):
         lines_b.set_z_index(-1)
         lines_all.set_z_index(-1)
         
-        self.add(lines, lines_b)
+        # TODO: Draw the lines according to Union Find
         
-        # TODO: Draw the shortest path
+        # TODO: BFS or DFS path search animation
+        
+        # Draw the shortest path
         path_lines = VGroup()
         for i, j in zip(path[:-1], path[1:]):
             p1 = [vor.vertices[all_idx[i], 0], vor.vertices[all_idx[i], 1], 0]
