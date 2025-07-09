@@ -82,11 +82,14 @@ class TwoDField_Vor_UF(MovingCameraScene):
         plt.plot(vor.vertices[all_idx[0], 0], vor.vertices[all_idx[0], 1], marker='x', linestyle='-', color='green', markersize=8)
         plt.plot(vor.vertices[all_idx[-1], 0], vor.vertices[all_idx[-1], 1], marker='x', linestyle='-', color='red', markersize=8)
         
-        ##### Step 4: Union-Find optimal path
-        path = union_find_optimal_path(vor, graph, all_idx)
+        ##### Step 4: Union-Find a connection from start to end
+        graph = union_find(vor, graph, all_idx)
+        
+        ##### Step 5: Find a path (doesn't matter how long as all of them are maximal distance to any cow)
+        path = find_path(graph, len(all_idx))
         
         
-        ##### Step 5 manim the shit out of it!
+        ##### Step 6: manim the shit out of it!
         
         # Create border rectangle instantly
         rect = Rectangle(width=x_length, height=y_length).move_to(x_length/2 * RIGHT + y_length/2 * UP)

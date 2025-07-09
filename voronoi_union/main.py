@@ -139,8 +139,10 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     
     return middle_points, all_idx
 
+    
 
-def union_find_optimal_path(vor: Voronoi, middle_points: np.array, all_idx: np.array):
+
+def union_find(vor: Voronoi, middle_points: np.array, all_idx: np.array):
     """Union Find algorithm in finding the optimal path
 
     Args:
@@ -184,22 +186,59 @@ def union_find_optimal_path(vor: Voronoi, middle_points: np.array, all_idx: np.a
         
         assert edge_idx != n_edges, f"We did not find a path! (Impossible?!) {edge_idx} == {n_edges}"
     
-    
-    # Building the path from Union Find (DFS)
-    visited = set()
-    stack = [(0, [0])]  # (current_node, path_so_far)
+    return graph
 
-    while stack:
-        node, path = stack.pop()
-        if node == n_nodes - 1:
-            break  # found target node
-        if node not in visited:
-            visited.add(node)
-            for neighbor in reversed(graph[node]):  # reverse to maintain similar order to BFS
-                if neighbor not in visited:
-                    stack.append((neighbor, path + [neighbor]))
-    
-    return path
+def dfs(graph: defaultdict, visited: set, path: list, node: int, n_nodes: int):
+    path = path + [node]  # create a new list to avoid side effects
+    visited.add(node)
+
+    if node == n_nodes - 1:
+        return path  # found target
+
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            result = dfs(graph, visited, path, neighbor, n_nodes)
+            if result:  # if a path was found
+                return result
+
+    return None  # no path found in this branch
+
+def find_path(graph: defaultdict, n_nodes: int, least_visited: bool = False):
+    """
+
+    Args:
+        graph (defaultdict): [description]
+        n_nodes (int): [description]
+    """
+    if n_nodes > 3000:
+        # Non-recursive DFS from ChatGPT
+        visited = set()
+        stack = [(0, [0])]  # (current_node, path_so_far)
+
+        while stack:
+            node, path = stack.pop()
+            if node == n_nodes - 1:
+                break  # found target node
+            if node not in visited:
+                visited.add(node)
+                for neighbor in graph[node]:
+                    if neighbor not in visited:
+                        stack.append((neighbor, path + [neighbor]))
+        
+        return path
+    else:
+        # Recrsive DFS from myself (only works up to ~4000 cows)
+        start_node = 0
+        visited = set()
+        for neighbor in graph[start_node]:
+            path = dfs(graph, visited, [start_node], neighbor, n_nodes)
+            
+            if path:
+                break
+            
+        assert path, "Did not find a path"
+            
+        return path
     
     
 
@@ -282,14 +321,17 @@ def main():
     plt.plot(vor.vertices[all_idx[0], 0], vor.vertices[all_idx[0], 1], marker='x', linestyle='-', color='green', markersize=8)
     plt.plot(vor.vertices[all_idx[-1], 0], vor.vertices[all_idx[-1], 1], marker='x', linestyle='-', color='red', markersize=8)
     
-    ##### Step 4: Union-Find optimal path
-    path = union_find_optimal_path(vor, graph, all_idx)
+    ##### Step 4: Union-Find a connection from start to end
+    graph = union_find(vor, graph, all_idx)
+    
+    ##### Step 5: Find a path (doesn't matter how long as all of them are maximal distance to any cow)
+    path = find_path(graph, len(all_idx))
     
     # total runtime complexity
     # 
     print("total runtime: ", time.time() - time_start, "[s]")
     
-    ##### Step 5: Plot
+    ##### Step 6: Plot
     
     # plot voronoi
     #fig = voronoi_plot_2d(vor)
