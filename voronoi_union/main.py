@@ -57,8 +57,23 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     Returns:
         cost (float): The cost of crossing this edge
     """
-    # This time the cost function is the distance between the cow and the path
-    cost = np.linalg.norm(c1 - c2)*0.5
+    crit_dist = 5    # critical distance between cows [m] closer than this will lead to rumo barking
+    
+    m = (c1 + c2)/2 # middle_point
+    
+    # now we have to check if the middle_point m between is actually on the vertex.
+    # If not, the point (a or b) which is the closest to the cow will be the cost of crossing the edge
+
+    # If t in [0, 1]: m is in between, if t in (-inf, 0): m closer to a and if t in (1, inf): closer to b
+    
+    t = np.dot(b - a, m - a)/np.dot(b - a, b - a)
+    
+    if 0 <= t <= 1:
+        cost = np.linalg.norm(c1 - m)
+    elif t < 0:
+        cost = np.linalg.norm(c1 - a)
+    else:
+        cost = np.linalg.norm(c1 - b)
     
     return cost
     
@@ -116,13 +131,13 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     closest_to_end = (-1, x_length)
     for idx in all_idx:
         vor_vertex = vor.vertices[idx]
-        if vor_vertex[1] == 0.:
+        if abs(vor_vertex[1]) < 1e-6:
             dist = abs(vor_vertex[0] - start_coord)
             
             if dist < closest_to_start[1]:
                 closest_to_start = (idx, dist)
                 
-        elif vor_vertex[1] == y_length:
+        elif abs(vor_vertex[1] - y_length) < 1e-6:
             dist = abs(vor_vertex[0] - end_coord)
             
             if dist < closest_to_end[1]:
@@ -186,11 +201,11 @@ def union_find(vor: Voronoi, middle_points: np.array, all_idx: np.array):
         
         assert edge_idx != n_edges, f"We did not find a path! (Impossible?!) {edge_idx} == {n_edges}"
     
-    return graph
+    return graph, edge_idx
 
-def dfs(graph: defaultdict, visited: set, path: list, node: int, n_nodes: int):
+def dfs(graph: defaultdict, visited: list, path: list, node: int, n_nodes: int):
     path = path + [node]  # create a new list to avoid side effects
-    visited.add(node)
+    visited.append(node)
 
     if node == n_nodes - 1:
         return path  # found target
@@ -218,18 +233,17 @@ def find_path(graph: defaultdict, n_nodes: int, least_visited: bool = False):
         while stack:
             node, path = stack.pop()
             if node == n_nodes - 1:
-                break  # found target node
-            if node not in visited:
-                visited.add(node)
-                for neighbor in graph[node]:
-                    if neighbor not in visited:
-                        stack.append((neighbor, path + [neighbor]))
+                break  # Found target node
+            for neighbor in graph[node]:
+                if neighbor not in visited:
+                    visited.add(neighbor)  # Mark as visited when pushing
+                    stack.append((neighbor, path + [neighbor]))
         
-        return path
+        return path, visited
     else:
         # Recrsive DFS from myself (only works up to ~4000 cows)
         start_node = 0
-        visited = set()
+        visited = [start_node] # make it to a list because of order perservation (i.e. manim)
         for neighbor in graph[start_node]:
             path = dfs(graph, visited, [start_node], neighbor, n_nodes)
             
@@ -238,10 +252,9 @@ def find_path(graph: defaultdict, n_nodes: int, least_visited: bool = False):
             
         assert path, "Did not find a path"
             
-        return path
+        return path, visited
     
     
-
 def main():
     """
     The main function to run the whole algorithm.
@@ -258,9 +271,9 @@ def main():
     
     ##### Step 1: Defining the problem field
     
-    x_length = 50        # x coordinate of the cows field [m]
-    y_length = 100        # y coordinate of the cows field [m]
-    n_obst = 100          # number of obsticles (cows)
+    x_length = 30        # x coordinate of the cows field [m]
+    y_length = 20        # y coordinate of the cows field [m]
+    n_obst = 10          # number of obsticles (cows)
     
     obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
     obst_coord[:,0] *= x_length
@@ -316,19 +329,20 @@ def main():
     
     ##### Step 3: building the weighted graph
     # O(n)
-    graph, all_idx = compute_graph(vor, obst_coord, n_obst, x_length, y_length, start_coord, end_coord)
+    edges_w_weights, all_idx = compute_graph(vor, obst_coord, n_obst, x_length, y_length, start_coord, end_coord)
     
     plt.plot(vor.vertices[all_idx[0], 0], vor.vertices[all_idx[0], 1], marker='x', linestyle='-', color='green', markersize=8)
     plt.plot(vor.vertices[all_idx[-1], 0], vor.vertices[all_idx[-1], 1], marker='x', linestyle='-', color='red', markersize=8)
     
     ##### Step 4: Union-Find a connection from start to end
-    graph = union_find(vor, graph, all_idx)
+    graph, _ = union_find(vor, edges_w_weights, all_idx)
     
     ##### Step 5: Find a path (doesn't matter how long as all of them are maximal distance to any cow)
-    path = find_path(graph, len(all_idx))
+    path, visited = find_path(graph, len(all_idx))
     
     # total runtime complexity
     # 
+    
     print("total runtime: ", time.time() - time_start, "[s]")
     
     ##### Step 6: Plot

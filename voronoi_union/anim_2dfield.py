@@ -77,16 +77,13 @@ class TwoDField_Vor_UF(MovingCameraScene):
         
         ##### Step 3: building the weighted graph
         # O(n)
-        graph, all_idx = compute_graph(vor, obst_coord, n_obst, x_length, y_length, start_coord, end_coord)
-        
-        plt.plot(vor.vertices[all_idx[0], 0], vor.vertices[all_idx[0], 1], marker='x', linestyle='-', color='green', markersize=8)
-        plt.plot(vor.vertices[all_idx[-1], 0], vor.vertices[all_idx[-1], 1], marker='x', linestyle='-', color='red', markersize=8)
-        
+        edges_w_weights, all_idx = compute_graph(vor, obst_coord, n_obst, x_length, y_length, start_coord, end_coord)
+    
         ##### Step 4: Union-Find a connection from start to end
-        graph = union_find(vor, graph, all_idx)
+        graph, final_edge_idx = union_find(vor, edges_w_weights, all_idx)
         
         ##### Step 5: Find a path (doesn't matter how long as all of them are maximal distance to any cow)
-        path = find_path(graph, len(all_idx))
+        path, visited_nodes = find_path(graph, len(all_idx))
         
         
         ##### Step 6: manim the shit out of it!
@@ -202,9 +199,39 @@ class TwoDField_Vor_UF(MovingCameraScene):
         lines_b.set_z_index(-1)
         lines_all.set_z_index(-1)
         
-        # TODO: Draw the lines according to Union Find
+        # Draw the lines according to Union Find
         
-        # TODO: BFS or DFS path search animation
+        uf_lines = VGroup()
+        for idx in range(final_edge_idx):
+            i = int(edges_w_weights[idx, 0])
+            j = int(edges_w_weights[idx, 1])
+            
+            p1 = [vor.vertices[i, 0], vor.vertices[i, 1], 0]
+            p2 = [vor.vertices[j, 0], vor.vertices[j, 1], 0]
+            
+            line = Line(
+                p1,
+                p2,
+                stroke_width=4,
+                color=PURE_RED # interpolate_color(BLUE, RED, weight)
+            )
+            
+            uf_lines.add(line)
+            
+        for line in uf_lines:
+            self.play(Create(line), run_time=1.0)  # adjust run_time as needed
+        self.wait()
+        
+        # BFS or DFS path search animation
+        node_visiting = VGroup()
+        edge_visiting = VGroup()
+        for enum, node_idx in enumerate(visited_nodes):
+            p1 = [vor.vertices[all_idx[node_idx], 0], vor.vertices[all_idx[node_idx], 1], 0]
+            
+            dot = Dot(point=p1, radius=0.2, color=YELLOW)
+            self.play(Indicate(dot))
+            
+        self.wait()
         
         # Draw the shortest path
         path_lines = VGroup()
