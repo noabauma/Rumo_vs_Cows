@@ -92,19 +92,14 @@ class Graph_Formula(MovingCameraScene):
         self.play(Write(eqs))
         self.wait(2)
 
-        # TODO: Compute the complexity
+        # Compute the complexity
         
-        # Discrete:
-        # build_field + compute_heatmap + compute_graph + shortest_path
-        # O(n)        + O(n)            + O(mn)         + O[n*k + n*log(n)] = O(nlogn)
-        
-        # Voronoi:
-        # build_field + compute_voronoi + compute_weights + shortest_path
-        # O(n)        + O(nlogn)        + O(mn)           + O[n*k + n*log(n)] = O(nlogn)
-        
-        # Voronoi_Union
-        # build_field + compute_voronoi + compute_weights + sort_edges + union_find  + BFS
-        # O(n)        + O(nlogn)        + O(mn)           + O(nlogn)   + O(alpha(n)) + O(kn) = O(nlogn)
+        # How the edges scale by number of vor.vertices
+        # The number of vertices in a voronoi diagram of a set of n points is at most 2n-5 and the number of edges are at most 3n-6.
+        # https://www.cse.iitk.ac.in/users/amit/courses/RMP/presentations/kshitij/index.html#:~:text=The%20number%20of%20vertices%20in,the%20convex%20hull%20of%20P.
+        # C: 0, 1, 2, 3,
+        # V: 0, 0, 0, 1, 2, 3, 4, 5
+        # E: 0, 0, 1, 3, 5, 7
         
         title = Text("Algorithm Complexity Comparison", font_size=40).move_to(UP*20)
         
@@ -116,7 +111,7 @@ class Graph_Formula(MovingCameraScene):
             MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "),
             MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{compute heatmap}} + "),
             MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{compute graph}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n + n \log n)}_{\text{shortest path}} = "),
+            MathTex(r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} = "),
             MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
         ).arrange(2*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(discrete_label, 0.5*DOWN, buff=0.3)
 
@@ -124,9 +119,9 @@ class Graph_Formula(MovingCameraScene):
         voronoi_label = Text("Voronoi:", font_size=20).next_to(discrete_steps, 0.5*DOWN, buff=1.5)
         voronoi_steps = VGroup(
             MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{compute voronoi}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n \log (kn))}_{\text{compute voronoi}} + "),
             MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{compute weights}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(kn + n \log n)}_{\text{shortest path}} = "),
+            MathTex(r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} = "),
             MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
         ).arrange(2*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(voronoi_label, 0.25*DOWN, buff=1.5)
 
@@ -134,11 +129,11 @@ class Graph_Formula(MovingCameraScene):
         union_label = Text("Voronoi Union:", font_size=20).next_to(voronoi_steps, 0.5*DOWN, buff=1.5)
         union_steps = VGroup(
             MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{compute voronoi}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n \log (kn))}_{\text{compute voronoi}} + "),
             MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{compute weights}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{sort edges}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(\alpha(n))}_{\text{union find}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{BFS}} = "),
+            MathTex(r"\underbrace{\mathcal{O}(kn \log (kn))}_{\text{sort edges}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(n \alpha(n))}_{\text{union find}} + "),
+            MathTex(r"\underbrace{\mathcal{O}(kn + n)}_{\text{DFS}} = "),
             MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
         ).arrange(2*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(union_label, 0.25*DOWN, buff=1.5)
 
@@ -150,19 +145,19 @@ class Graph_Formula(MovingCameraScene):
         self.play(FadeIn(all_labels))
 
         # Animate Discrete steps
-        for step in discrete_steps:
+        for step in discrete_steps[:-1]:
             self.play(FadeIn(step), run_time=0.4)
 
         self.wait(0.5)
 
         # Animate Voronoi steps
-        for step in voronoi_steps:
+        for step in voronoi_steps[:-1]:
             self.play(FadeIn(step), run_time=0.4)
 
         self.wait(0.5)
 
         # Animate Voronoi Union steps
-        for step in union_steps:
+        for step in union_steps[:-1]:
             self.play(FadeIn(step), run_time=0.3)
 
         self.wait(1)

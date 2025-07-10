@@ -63,7 +63,7 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     # cost: the cost of crossing this edge
     # x_coord: of the middle_point (debugging purpose)
     # y_coord: of the middle_point (debugging purpose)
-    middle_points = []
+    edges_w_weights = []
     for i, ridge_point in enumerate(vor.ridge_points):        
         # go through all the ridge_points inside and on the rectangle field
         if not (ridge_point[0] >= n_obst and ridge_point[1] >= n_obst):
@@ -76,15 +76,15 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
             middle_point[2] = cost_function(vor.vertices[vor.ridge_vertices[i][0]], vor.vertices[vor.ridge_vertices[i][1]], obst_coord[ridge_point[0]], obst_coord[ridge_point[1]])
             middle_point[3:] = np.array(obst_coord[ridge_point[0]] + obst_coord[ridge_point[1]])/2
             
-            middle_points.append(middle_point)
+            edges_w_weights.append(middle_point)
             
             
-    middle_points = np.array(middle_points)
+    edges_w_weights = np.array(edges_w_weights)
     
     # Next step: store everything into a weightes CSR graph file
     
     # First, make a mapping of the vor.vertices to arange as CSR starts from 0, n_points -1.
-    all_idx = np.unique(middle_points[:,0:2]).astype(int)
+    all_idx = np.unique(edges_w_weights[:,0:2]).astype(int)
     
     # We define the end and starting point by shuffeling the all_idx! (amazing)
     # The first index is the starting point and the last index the end point
@@ -118,7 +118,7 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     
     n_nodes = len(all_idx)
     graph = np.zeros((n_nodes, n_nodes))
-    for middle_point in middle_points:
+    for middle_point in edges_w_weights:
         # O(n) cost of searching this idx in all_idx
         i = np.where(all_idx == middle_point[0])[0][0]
         j = np.where(all_idx == middle_point[1])[0][0]
@@ -146,7 +146,7 @@ def main():
     
     x_length = 50        # x coordinate of the cows field [m]
     y_length = 100        # y coordinate of the cows field [m]
-    n_obst = 100          # number of obsticles (cows)
+    n_obst = 3000          # number of obsticles (cows)
     
     obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
     obst_coord[:,0] *= x_length
@@ -196,7 +196,7 @@ def main():
     
     ##### Step 4: Compute the shortest path
     # O[n*k + n*log(n)] with k in [3,6] -> O(n*log(n))
-    dist_matrix, predecessors = shortest_path(csgraph=graph, method='auto', directed=False, indices=0, return_predecessors=True)
+    dist_matrix, predecessors = shortest_path(csgraph=graph, method='D', directed=False, indices=0, return_predecessors=True)
     
     # Backtrack to find the shortest path from source to destination
     path = []
@@ -222,8 +222,8 @@ def main():
     y_coords = vor.vertices[all_idx[path], 1]
     plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
     
-    #colors = ['green' if (0.0 < t < 1.0) else 'red' for t in middle_points[:,3]]
-    #plt.scatter(middle_points[:,4], middle_points[:,5], c=colors, s=50, edgecolors='black')
+    #colors = ['green' if (0.0 < t < 1.0) else 'red' for t in edges_w_weights[:,3]]
+    #plt.scatter(edges_w_weights[:,4], edges_w_weights[:,5], c=colors, s=50, edgecolors='black')
     
     plt.scatter(og_obst_coord[:,0], og_obst_coord[:,1], c='pink', s=50)
 

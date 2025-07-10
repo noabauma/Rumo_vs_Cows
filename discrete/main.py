@@ -197,7 +197,7 @@ def main():
     swap_nodes(graph, end_coord, -1)
     
     ##### Step 4: Compute the shortest path
-    dist_matrix, predecessors = shortest_path(csgraph=graph, method='auto', directed=False, indices=start_coord, return_predecessors=True)
+    dist_matrix, predecessors = shortest_path(csgraph=graph, method='D', directed=False, indices=start_coord, return_predecessors=True)
     
     # Backtrack to find the shortest path from source to destination
     path = []

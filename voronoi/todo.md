@@ -1,2 +1,0 @@
-- [ ] Improve code documentations
-- [ ] calculate the computational cost of all steps (except plotting)

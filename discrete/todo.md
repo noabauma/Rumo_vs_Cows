@@ -1,6 +1,0 @@
-- [ ] Improve code documentations
-- [x] Split step 2&3 into separate functions
-- [x] Give the option to chose the start and end point
-- [x] sys.argv not yet working (removed)
-- [x] plt.show() get it running? (just run Xlaunch)
-- [ ] calculate the computational cost of all steps (except plotting)

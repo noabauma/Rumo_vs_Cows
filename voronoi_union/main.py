@@ -98,7 +98,7 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     # t: if t in [0, 1] the middle point lies between the ridge points else it is outside (debugging purpose)
     # x_coord: of the middle_point (debugging purpose)
     # y_coord: of the middle_point (debugging purpose)
-    middle_points = []
+    edges_w_weights = []
     for i, ridge_point in enumerate(vor.ridge_points):        
         # go through all the ridge_points with atleast one being inside the boundary
         if not (ridge_point[0] >= n_obst and ridge_point[1] >= n_obst):
@@ -111,16 +111,16 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
             middle_point[2] = cost_function(vor.vertices[vor.ridge_vertices[i][0]], vor.vertices[vor.ridge_vertices[i][1]], obst_coord[ridge_point[0]], obst_coord[ridge_point[1]])
             middle_point[3:] = np.array(obst_coord[ridge_point[0]] + obst_coord[ridge_point[1]])/2
             
-            middle_points.append(middle_point)
+            edges_w_weights.append(middle_point)
             
             
-    middle_points = np.array(middle_points)
+    edges_w_weights = np.array(edges_w_weights)
     
     # Sort by column by best graph (i.e. highest score)
-    middle_points = middle_points[np.argsort(middle_points[:, 2])[::-1]]
+    edges_w_weights = edges_w_weights[np.argsort(edges_w_weights[:, 2])[::-1]]
     
     # First, make a mapping of the vor.vertices to arange as CSR starts from 0, n_points -1.
-    all_idx = np.unique(middle_points[:,0:2]).astype(int)
+    all_idx = np.unique(edges_w_weights[:,0:2]).astype(int)
     
     # We define the end and starting point by shuffeling the all_idx! (amazing)
     # The first index is the starting point and the last index the end point
@@ -152,16 +152,16 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     all_idx[0], all_idx[start_idx] = all_idx[start_idx], all_idx[0]
     all_idx[-1], all_idx[end_idx] = all_idx[end_idx], all_idx[-1]
     
-    return middle_points, all_idx
+    return edges_w_weights, all_idx
 
     
 
 
-def union_find(vor: Voronoi, middle_points: np.array, all_idx: np.array):
+def union_find(vor: Voronoi, edges_w_weights: np.array, all_idx: np.array):
     """Union Find algorithm in finding the optimal path
 
     Args:
-        middle_points (np.array): Array of the x,y coordinate as well as the cost of each edge
+        edges_w_weights (np.array): Array of the x,y coordinate as well as the cost of each edge
         all_idx (np.array): the actual node indeces of the voronoi mesh
     """
     # We create a mapping between indeces {0, n-1} and the real all_idx for O(1) lookup time
@@ -170,16 +170,13 @@ def union_find(vor: Voronoi, middle_points: np.array, all_idx: np.array):
     n_nodes = len(all_idx)
     uf = UnionFind(n_nodes)
     graph = defaultdict(list)
-    
-    # print(middle_points[:,0:3])
-    # print(all_idx)
 
-    n_edges = middle_points.shape[0]
+    n_edges = edges_w_weights.shape[0]
     edge_idx = 0
     while uf.find(0) != uf.find(n_nodes - 1):
         
-        i = int(middle_points[edge_idx, 0])
-        j = int(middle_points[edge_idx, 1])
+        i = int(edges_w_weights[edge_idx, 0])
+        j = int(edges_w_weights[edge_idx, 1])
         
         # x_coords = [vor.vertices[i, 0], vor.vertices[j, 0]]
         # y_coords = [vor.vertices[i, 1], vor.vertices[j, 1]]
@@ -225,7 +222,8 @@ def find_path(graph: defaultdict, n_nodes: int, least_visited: bool = False):
         graph (defaultdict): [description]
         n_nodes (int): [description]
     """
-    if n_nodes > 3000:
+    print(n_nodes)
+    if n_nodes > 6000:
         # Non-recursive DFS from ChatGPT
         visited = set()
         stack = [(0, [0])]  # (current_node, path_so_far)
@@ -241,7 +239,7 @@ def find_path(graph: defaultdict, n_nodes: int, least_visited: bool = False):
         
         return path, visited
     else:
-        # Recrsive DFS from myself (only works up to ~4000 cows)
+        # Recrsive DFS from myself (only works up to ~6000 cows)
         start_node = 0
         visited = [start_node] # make it to a list because of order perservation (i.e. manim)
         for neighbor in graph[start_node]:
@@ -271,9 +269,9 @@ def main():
     
     ##### Step 1: Defining the problem field
     
-    x_length = 30        # x coordinate of the cows field [m]
-    y_length = 20        # y coordinate of the cows field [m]
-    n_obst = 10          # number of obsticles (cows)
+    x_length = 50        # x coordinate of the cows field [m]
+    y_length = 100        # y coordinate of the cows field [m]
+    n_obst = 3000          # number of obsticles (cows)
     
     obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
     obst_coord[:,0] *= x_length
@@ -338,7 +336,7 @@ def main():
     graph, _ = union_find(vor, edges_w_weights, all_idx)
     
     ##### Step 5: Find a path (doesn't matter how long as all of them are maximal distance to any cow)
-    path, visited = find_path(graph, len(all_idx))
+    path, visited_nodes = find_path(graph, len(all_idx))
     
     # total runtime complexity
     # 
@@ -355,7 +353,7 @@ def main():
     y_coords = vor.vertices[all_idx[path], 1]
     plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
     
-    #plt.scatter(middle_points[:,3], middle_points[:,4], s=50, edgecolors='black')
+    #plt.scatter(edges_w_weights[:,3], edges_w_weights[:,4], s=50, edgecolors='black')
 
     plt.xlabel('X Axis')
     plt.ylabel('Y Axis')
