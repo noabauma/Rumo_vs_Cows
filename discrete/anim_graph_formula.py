@@ -104,38 +104,52 @@ class Graph_Formula(MovingCameraScene):
         title = Text("Algorithm Complexity Comparison", font_size=40).move_to(UP*20)
         
         self.play(FadeIn(title))
-
+        
         # --- Discrete ---
         discrete_label = Text("Discrete:", font_size=20).next_to(title, 1*DOWN, buff=0.3)
-        discrete_steps = VGroup(
-            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{compute heatmap}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{compute graph}} + "),
-            MathTex(r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} = "),
-            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
-        ).arrange(2*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(discrete_label, 0.5*DOWN, buff=0.3)
+        discrete_expr = MathTex(
+            r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "
+            r"\underbrace{\mathcal{O}(n)}_{\text{compute heatmap}} + "
+            r"\underbrace{\mathcal{O}(kn)}_{\text{compute graph}} + "
+            r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} \overset{k=3}{=}"
+        )
+        discrete_total = MathTex(
+            r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}"
+        )
+        discrete_group = VGroup(discrete_expr, discrete_total).scale(0.7).arrange(RIGHT, buff=0.15)
+        discrete_group.next_to(discrete_label, DOWN, buff=0.3)  # <- FIXED
 
         # --- Voronoi ---
-        voronoi_label = Text("Voronoi:", font_size=20).next_to(discrete_steps, 0.5*DOWN, buff=1.5)
-        voronoi_steps = VGroup(
-            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n \log (kn))}_{\text{compute voronoi}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{compute weights}} + "),
-            MathTex(r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} = "),
-            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
-        ).arrange(2*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(voronoi_label, 0.25*DOWN, buff=1.5)
+        voronoi_label = Text("Voronoi:", font_size=20).next_to(discrete_label, 1.5*DOWN, buff=1.3)  # align by label
+        voronoi_expr = MathTex(
+            r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "
+            r"\underbrace{\mathcal{O}(n \log (kn))}_{\text{compute voronoi}} + "
+            r"\underbrace{\mathcal{O}(kn)}_{\text{compute weights}} + "
+            r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} \overset{k=3}{=}"
+        )
+        voronoi_total = MathTex(
+            r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}"
+        )
+        voronoi_group = VGroup(voronoi_expr, voronoi_total).scale(0.7).arrange(RIGHT, buff=0.15)
+        voronoi_group.next_to(voronoi_label, DOWN, buff=0.3)  # <- FIXED
 
         # --- Voronoi Union ---
-        union_label = Text("Voronoi Union:", font_size=20).next_to(voronoi_steps, 0.5*DOWN, buff=1.5)
-        union_steps = VGroup(
-            MathTex(r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n \log (kn))}_{\text{compute voronoi}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(kn)}_{\text{compute weights}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(kn \log (kn))}_{\text{sort edges}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(n \alpha(n))}_{\text{union find}} + "),
-            MathTex(r"\underbrace{\mathcal{O}(kn + n)}_{\text{DFS}} = "),
-            MathTex(r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}")
-        ).arrange(2*RIGHT, aligned_edge=RIGHT).scale(0.7).next_to(union_label, 0.25*DOWN, buff=1.5)
+        union_label = Text("Voronoi Union:", font_size=20).next_to(voronoi_label, 1.5*DOWN, buff=1.3)  # align by label
+        union_expr = MathTex(
+            r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "
+            r"\underbrace{\mathcal{O}(n \log (kn))}_{\text{compute voronoi}} + "
+            r"\underbrace{\mathcal{O}(kn)}_{\text{compute weights}} + "
+            r"\underbrace{\mathcal{O}(kn \log (kn))}_{\text{sort edges}} + "
+            r"\underbrace{\mathcal{O}(n \alpha(n))}_{\text{union find}} + "
+            r"\underbrace{\mathcal{O}(kn + n)}_{\text{DFS}} \overset{k=3}{=}"
+        )
+        union_total = MathTex(
+            r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}"
+        )
+        union_group = VGroup(union_expr, union_total).scale(0.7).arrange(RIGHT, buff=0.15)
+        union_group.next_to(union_label, DOWN, buff=0.3)
+
+
 
         # Show final heading and equations
         self.play(self.camera.frame.animate.move_to(voronoi_label))
@@ -145,27 +159,23 @@ class Graph_Formula(MovingCameraScene):
         self.play(FadeIn(all_labels))
 
         # Animate Discrete steps
-        for step in discrete_steps[:-1]:
-            self.play(FadeIn(step), run_time=0.4)
+        self.play(FadeIn(discrete_expr))
 
         self.wait(0.5)
 
         # Animate Voronoi steps
-        for step in voronoi_steps[:-1]:
-            self.play(FadeIn(step), run_time=0.4)
+        self.play(FadeIn(voronoi_expr))
 
         self.wait(0.5)
 
         # Animate Voronoi Union steps
-        for step in union_steps[:-1]:
-            self.play(FadeIn(step), run_time=0.3)
+        self.play(FadeIn(union_expr))
 
         self.wait(1)
 
         # Emphasize the "Total" rows
-        for group in [discrete_steps, voronoi_steps, union_steps]:
-            total_line = group[-1]
-            self.play(total_line.animate.set_color(YELLOW).scale(1.1))
+        for total in [discrete_total, voronoi_total, union_total]:
+            self.play(total.animate.set_color(YELLOW).scale(1.1))
 
         self.wait(2)
         
