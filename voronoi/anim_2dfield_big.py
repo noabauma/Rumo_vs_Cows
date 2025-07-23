@@ -25,14 +25,12 @@ def is_inside_rect(point, rect: Rectangle):
         y_min <= point[1] <= y_max
     )
 
-
-class TwoDField_Vor_UF(MovingCameraScene):        
+class TwoDField_Vor_Big(MovingCameraScene):        
     def construct(self):
         ##### Step 1: Defining the problem field
-    
-        x_length = 30        # x coordinate of the cows field [m]
-        y_length = 20        # y coordinate of the cows field [m]
-        n_obst = 10          # number of obsticles (cows)
+        x_length = 60        # x coordinate of the cows field [m]
+        y_length = 100        # y coordinate of the cows field [m]
+        n_obst = 100          # number of obsticles (cows)
         
         obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
         obst_coord[:,0] *= x_length
@@ -77,30 +75,36 @@ class TwoDField_Vor_UF(MovingCameraScene):
         
         ##### Step 3: building the weighted graph
         # O(n)
-        edges_w_weights, all_idx = compute_graph(vor, obst_coord, n_obst, x_length, y_length, start_coord, end_coord)
-    
-        ##### Step 4: Union-Find a connection from start to end
-        graph, final_edge_idx = union_find(vor, edges_w_weights, all_idx)
+        graph, all_idx = compute_graph(vor, obst_coord, n_obst, x_length, y_length, start_coord, end_coord)
         
-        ##### Step 5: Find a path (doesn't matter how long as all of them are maximal distance to any cow)
-        path, visited_nodes = find_path(graph, len(all_idx))
+        ##### Step 4: Compute the shortest path
+        # O[n*k + n*log(n)] with k in [3,6] -> O(n*log(n))
+        dist_matrix, predecessors = shortest_path(csgraph=graph, method='auto', directed=False, indices=0, return_predecessors=True)
         
-        
-        ##### Step 6: manim the shit out of it!
-        
-        # Create border rectangle instantly
-        rect = Rectangle(width=x_length, height=y_length).move_to(x_length/2 * RIGHT + y_length/2 * UP)
-        self.add(rect)  # Show immediately
+        # Backtrack to find the shortest path from source to destination
+        path = []
+        step = -1
+        while step != 0:
+            path.append(step)
+            step = predecessors[step]
 
-        # Create a domain subrectangle (for cost display later)
-        rect_domain = [x_length / 3, y_length / 3, [2/5 * x_length, 2/5 * y_length, 0]]
+        path.append(0)
+        path = path[::-1]  # Reverse the path to get it from source to destination
+        
+        
+        ##### Step 5 manim the shit out of it!
+        
+        # At the border (i.e. Rectangle)
+        rect = Rectangle(width=x_length, height=y_length).move_to(x_length/2*RIGHT+y_length/2*UP)
+        
+        # This Rect is for later to show the cost of one edge
+        rect_domain = [x_length/3, y_length/3, [2/5*x_length, 2/5*y_length, 0]]
         rect_tmp = Rectangle(width=rect_domain[0], height=rect_domain[1]).move_to(rect_domain[2])
-
-        # Instantly set the camera view to the outer rectangle
-        margin = max(x_length, y_length) * 0.1
-        self.camera.frame.move_to(rect)
-        self.camera.frame.set(width=x_length + margin, height=y_length + margin)
-
+        
+        
+        # Move the camera to the rectangle
+        margin = max(x_length, y_length)*0.1
+        self.play(self.camera.frame.animate.move_to(rect).set(width=x_length + margin, height=y_length + margin))
         
         # Save the state of camera
         self.camera.frame.save_state()
@@ -115,47 +119,36 @@ class TwoDField_Vor_UF(MovingCameraScene):
         # Make the cows infront of the grid_points
         cows.set_z_index(1)
         
-        vor_vertices_b   = VGroup()
         vor_vertices_og  = VGroup()
-        vor_vertices_all = VGroup()
         
         for x, y in vor.vertices:
-            if (1e-6 < x < x_length) and (1e-6 < y < y_length):
+            if (-1e-6 < x < x_length + 1e-6) and (-1e-6 < y < y_length + 1e-6):
                 dot = Dot(point=[x, y, 0], radius=0.2, color=BLUE)
                 vor_vertices_og.add(dot)
-                
-            elif (-1e-6 < x < x_length + 1e-6) and (-1e-6 < y < y_length + 1e-6):
-                dot = Dot(point=[x, y, 0], radius=0.2, color=BLUE)
-                vor_vertices_b.add(dot)
-                
-            dot = Dot(point=[x, y, 0], radius=0.2, color=BLUE)
-            vor_vertices_all.add(dot)
 
         
         vor_vertices_og.set_z_index(-2)
-        vor_vertices_b.set_z_index(-2)
-        vor_vertices_all.set_z_index(-2)
-        
-        self.add(vor_vertices_og, vor_vertices_b)
+
+        # Animate
+        # self.add(rect)
         self.add(cows)
         
         # Draw the starting and end point
         start_point = Circle(color=WHITE, fill_opacity=1).scale(0.6).move_to([vor.vertices[all_idx[0], 0], vor.vertices[all_idx[0], 1], 0])
         end_point = Star(color=WHITE, fill_opacity=1).scale(0.6).move_to([vor.vertices[all_idx[-1], 0], vor.vertices[all_idx[-1], 1], 0])
 
-        self.add(start_point, end_point)
+        self.add(start_point)
+        self.add(end_point)
         
         # Now adding the edges (with labels)
         
         lines = VGroup()
-        lines_b = VGroup()
-        lines_all = VGroup()
 
-        for ridge_point in vor.ridge_points: 
+        for idx, ridge_point in enumerate(vor.ridge_points): 
             #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
             
-            i = ridge_point[0]
-            j = ridge_point[1]
+            i = vor.ridge_vertices[idx][0]
+            j = vor.ridge_vertices[idx][1]
             
             if i == -1 or j == -1:
                 continue
@@ -163,7 +156,7 @@ class TwoDField_Vor_UF(MovingCameraScene):
             a = vor.vertices[i]
             b = vor.vertices[j]
             
-            if (1e-6 < a[0] < x_length) and (1e-6 < a[1] < y_length) and (1e-6 < b[0] < x_length) and (1e-6 < b[1] < y_length):
+            if (-1e-6 < a[0] < x_length + 1e-6) and (-1e-6 < a[1] < y_length + 1e-6) and (-1e-6 < b[0] < x_length + 1e-6) and (-1e-6 < b[1] < y_length + 1e-6):
                 line = Line(
                     [a[0], a[1], 0],
                     [b[0], b[1], 0],
@@ -171,63 +164,11 @@ class TwoDField_Vor_UF(MovingCameraScene):
                     color=BLUE # interpolate_color(BLUE, RED, weight)
                 )
                 lines.add(line)
-            elif (-1e-6 < a[0] < x_length + 1e-6) and (-1e-6 < a[1] < y_length + 1e-6) and (-1e-6 < b[0] < x_length + 1e-6) and (-1e-6 < b[1] < y_length + 1e-6):
-                line = Line(
-                    [a[0], a[1], 0],
-                    [b[0], b[1], 0],
-                    stroke_width=4,
-                    color=BLUE # interpolate_color(BLUE, RED, weight)
-                )
-                lines_b.add(line)
-
-            line = Line(
-                [a[0], a[1], 0],
-                [b[0], b[1], 0],
-                stroke_width=4,
-                color=BLUE # interpolate_color(BLUE, RED, weight)
-            )
-            lines_all.add(line)
-
-
+   
         lines.set_z_index(-1)
-        lines_b.set_z_index(-1)
-        lines_all.set_z_index(-1)
-        
-        # Draw the lines according to Union Find
-        
-        uf_lines = VGroup()
-        for idx in range(final_edge_idx):
-            i = int(edges_w_weights[idx, 0])
-            j = int(edges_w_weights[idx, 1])
-            
-            p1 = [vor.vertices[i, 0], vor.vertices[i, 1], 0]
-            p2 = [vor.vertices[j, 0], vor.vertices[j, 1], 0]
-            
-            line = Line(
-                p1,
-                p2,
-                stroke_width=4,
-                color=ORANGE # interpolate_color(BLUE, RED, weight)
-            )
-            
-            uf_lines.add(line)
-            
-        for line in uf_lines[:-1]:
-            self.play(Create(line), run_time=1.0)  # adjust run_time as needed
-        self.wait()
-        
-        uf_lines[-1].set_color(PURE_RED)
-        self.play(Create(uf_lines[-1]), run_time=1.0)
-        self.wait()
-        
-        # BFS or DFS path search animation
-        for node_idx in visited_nodes:
-            p1 = [vor.vertices[all_idx[node_idx], 0], vor.vertices[all_idx[node_idx], 1], 0]
-            
-            dot = Dot(point=p1, radius=0.2, color=YELLOW)
-            self.play(Indicate(dot))
-            
-        self.wait()
+
+        self.add(vor_vertices_og)
+        self.add(lines)
         
         # Draw the shortest path
         path_lines = VGroup()
@@ -240,5 +181,6 @@ class TwoDField_Vor_UF(MovingCameraScene):
         path_lines.set_z_index(2)
 
         # Animate the path drawing
+        self.wait()
         self.play(Create(path_lines), run_time=3)
         self.wait()

@@ -26,7 +26,7 @@ def is_inside_rect(point, rect: Rectangle):
     )
 
 
-class TwoDField_Vor_UF(MovingCameraScene):        
+class TwoDField_Vor_UF_Big(MovingCameraScene):        
     def construct(self):
         ##### Step 1: Defining the problem field
     

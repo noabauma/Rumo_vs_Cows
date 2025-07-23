@@ -108,10 +108,10 @@ class Graph_Formula(MovingCameraScene):
         # --- Discrete ---
         discrete_label = Text("Discrete:", font_size=20).next_to(title, 1*DOWN, buff=0.3)
         discrete_expr = MathTex(
-            r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "
-            r"\underbrace{\mathcal{O}(n)}_{\text{compute heatmap}} + "
+            #r"\underbrace{\mathcal{O}(c + n)}_{\text{build field}} + "
+            r"\underbrace{\mathcal{O}(cn)}_{\text{compute heatmap}} + "
             r"\underbrace{\mathcal{O}(kn)}_{\text{compute graph}} + "
-            r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} \overset{k=3}{=}"
+            r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} \overset{c<<n,k=4}{=}"
         )
         discrete_total = MathTex(
             r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}"
@@ -122,10 +122,10 @@ class Graph_Formula(MovingCameraScene):
         # --- Voronoi ---
         voronoi_label = Text("Voronoi:", font_size=20).next_to(discrete_label, 1.5*DOWN, buff=1.3)  # align by label
         voronoi_expr = MathTex(
-            r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "
-            r"\underbrace{\mathcal{O}(n \log (kn))}_{\text{compute voronoi}} + "
+            #r"\underbrace{\mathcal{O}(c)}_{\text{build field}} + "
+            r"\underbrace{\mathcal{O}(c \log (kn))}_{\text{compute voronoi}} + "
             r"\underbrace{\mathcal{O}(kn)}_{\text{compute weights}} + "
-            r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} \overset{k=3}{=}"
+            r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} \overset{c\approx\frac{n}{2},k\approx3}{=}"
         )
         voronoi_total = MathTex(
             r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}"
@@ -134,14 +134,14 @@ class Graph_Formula(MovingCameraScene):
         voronoi_group.next_to(voronoi_label, DOWN, buff=0.3)  # <- FIXED
 
         # --- Voronoi Union ---
-        union_label = Text("Voronoi Union:", font_size=20).next_to(voronoi_label, 1.5*DOWN, buff=1.3)  # align by label
+        union_label = Text("Voronoi Union Find:", font_size=20).next_to(voronoi_label, 1.5*DOWN, buff=1.3)  # align by label
         union_expr = MathTex(
-            r"\underbrace{\mathcal{O}(n)}_{\text{build field}} + "
-            r"\underbrace{\mathcal{O}(n \log (kn))}_{\text{compute voronoi}} + "
+            #r"\underbrace{\mathcal{O}(c)}_{\text{build field}} + "
+            r"\underbrace{\mathcal{O}(c \log (kn))}_{\text{compute voronoi}} + "
             r"\underbrace{\mathcal{O}(kn)}_{\text{compute weights}} + "
             r"\underbrace{\mathcal{O}(kn \log (kn))}_{\text{sort edges}} + "
             r"\underbrace{\mathcal{O}(n \alpha(n))}_{\text{union find}} + "
-            r"\underbrace{\mathcal{O}(kn + n)}_{\text{DFS}} \overset{k=3}{=}"
+            r"\underbrace{\mathcal{O}(kn + n)}_{\text{DFS}} \overset{c\approx\frac{n}{2},k\approx3}{=}"
         )
         union_total = MathTex(
             r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}"

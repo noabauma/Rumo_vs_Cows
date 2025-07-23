@@ -12,12 +12,12 @@ class Cross(VGroup):
         super().__init__(line1, line2)
         self.move_to(point)
 
-class TwoDField_Dis(MovingCameraScene):        
+class TwoDField_Dis_Big(MovingCameraScene):        
     def construct(self):
         ##### Step 1: Let's build the problem field
-        x_length = 30        # x coordinate of the cows field [m]
-        y_length = 20        # y coordinate of the cows field [m]
-        n_obst = 10          # number of obsticles (cows)
+        x_length = 60        # x coordinate of the cows field [m]
+        y_length = 100        # y coordinate of the cows field [m]
+        n_obst = 100          # number of obsticles (cows)
         
         np.random.seed(42)   # seed for the random number generator
             
@@ -86,8 +86,8 @@ class TwoDField_Dis(MovingCameraScene):
         grid_points_.set_z_index(0)
 
         # Animate
-        self.play(Create(rect))
-        self.play(LaggedStartMap(FadeIn, cows, lag_ratio=0.05))
+        self.add(rect)
+        self.add(cows)
         
         # Draw the starting and end point
         start_point = Circle(color=WHITE, fill_opacity=1).scale(0.6).move_to([grid_points[start_coord, 0], grid_points[start_coord, 1], 0])
@@ -96,39 +96,12 @@ class TwoDField_Dis(MovingCameraScene):
         start_point.set_z_index(2)
         end_point.set_z_index(2)
 
-        self.play(Indicate(start_point, color=WHITE))
-        self.wait()
-        self.play(Indicate(end_point, color=WHITE))
-        self.wait()
-        
-        self.play(Create(grid_points_))
-        self.wait()
-        
-        # Let's move the camera to a corner
-        margin = max(x_length, y_length)/60  # optional margin
-        camera_x = x_length/10
-        camera_y = y_length*(19/20)
-        view_width = (x_length/5 + margin)*(16/9)
-        view_height = y_length/5 + margin
-        self.play(self.camera.frame.animate.move_to([camera_x, camera_y, 0]).set(width=view_width, height=view_height))
-        self.wait()
-                
-        # Labels for z-values (heatmap values)
-        labels = VGroup(*[
-            DecimalNumber(z, num_decimal_places=2, color=WHITE)
-            .scale(0.4)
-            .next_to([x, y, 0], 2*UP, buff=0.1)
-            for x, y, z in grid_points if abs(x - camera_x) < view_width/2 and abs(y - camera_y) < view_height/1.5
-        ])
-        
-        labels.set_z_index(0)
-        
-        self.play(Create(labels))
-        self.wait()
+        self.add(start_point)
+        self.add(end_point)
+        self.add(grid_points_)
         
         # Now adding the edges (with labels)
         lines = VGroup()
-        line_labels = VGroup()
         coo = graph.tocoo()
 
         for i, j, weight in zip(coo.row, coo.col, coo.data):
@@ -144,64 +117,12 @@ class TwoDField_Dis(MovingCameraScene):
                 )
                 lines.add(line)
                 
-                # Label
-                x = line.get_center()[0]
-                y = line.get_center()[1]
-                if abs(x - camera_x) < view_width/2 and abs(y - camera_y) < view_height/2:
-                
-                    label = DecimalNumber(
-                        weight,
-                        num_decimal_places=2,
-                        font_size=20
-                    ).move_to(line.get_center())
-                    
-                    # Rotate label to match line direction
-                    angle = line.get_angle()
-                    label.rotate(angle)
-                    
-                    if 0.5 < angle < 1.0:
-                        label.move_to(label.get_center() + 0.20*(UP + RIGHT))
-                    elif 2.0 < angle < 2.5:
-                        label.move_to(label.get_center() + 0.20*(UP + LEFT))
-                        label.rotate(PI)
-                    else:
-                        label.move_to(label.get_center() + 0.1*(UP))
-                    
-                    line_labels.add(label)
-                
         lines.set_z_index(-1)
-        line_labels.set_z_index(-1)
 
-        self.play(Create(lines), run_time=5)
-        self.wait()
-        
-        
-        # Draw the labels of the lines
-        self.play(FadeIn(line_labels))
-        self.wait()
-        self.play(FadeOut(labels))
-        self.wait()
-        
-        # Move out again to show the while field        
-        margin = max(x_length, y_length)*0.1
-        self.play(FadeOut(line_labels), 
-                  self.camera.frame.animate.move_to(rect).set(width=x_length + margin, height=y_length + margin))
-        self.wait()
-        
-        # Save the state of camera
-        self.camera.frame.save_state()
-        
-        # Replace existing dots with larger ones
-        larger_dots = VGroup(*[
-            Dot(p.get_center(), radius=0.3, color=p.color)
-            for p in grid_points_
-        ])
-
-        self.play(Transform(grid_points_, larger_dots))
-        self.wait()
+        self.add(lines)
 
         
-        # TODO: Draw the shortest path
+        # Draw the shortest path
         path_lines = VGroup()
         for i, j in zip(path[:-1], path[1:]):
             p1 = [grid_points[i, 0], grid_points[i, 1], 0]
