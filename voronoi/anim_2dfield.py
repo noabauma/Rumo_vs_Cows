@@ -166,10 +166,10 @@ class TwoDField_Vor(MovingCameraScene):
         the_points = []
 
         for idx, ridge_point in enumerate(vor.ridge_points): 
-            #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
-            
             i = vor.ridge_vertices[idx][0]
             j = vor.ridge_vertices[idx][1]
+            
+            #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
             
             if i == -1 or j == -1:
                 continue
@@ -326,7 +326,7 @@ class TwoDField_Vor(MovingCameraScene):
         self.play(FadeOut(vor_vertices_all, lines_all, mirror_u_v, mirror_u, mirror_d, mirror_l, mirror_r, mirror_dl, mirror_dr, mirror_ul, mirror_ur))
         self.wait()
         
-        # TODO: Zoom in to one line and show cost of it
+        # Zoom in to one line and show cost of it
         # self.play(Create(rect_tmp))
         # self.wait()
         self.camera.frame.save_state()
@@ -373,19 +373,6 @@ class TwoDField_Vor(MovingCameraScene):
         
         self.play(FadeOut(discrete_labels, discrete_points), Create(the_label))
         self.wait()
-        
-        
-        """
-        # Move out again to show the while field        
-        margin = max(x_length, y_length)*0.1
-        self.play(FadeOut(labels), 
-                  FadeOut(line_labels), 
-                  self.camera.frame.animate.move_to(rect).set(width=x_length + margin, height=y_length + margin))
-        self.wait()
-        
-        # Save the state of camera
-        self.camera.frame.save_state()
-        """
         
         self.play(FadeOut(the_label), self.camera.frame.animate.restore(), run_time=2)
         self.wait()

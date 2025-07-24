@@ -144,11 +144,11 @@ class TwoDField_Vor_Big(MovingCameraScene):
         
         lines = VGroup()
 
-        for idx, ridge_point in enumerate(vor.ridge_points): 
-            #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
+        for ridge_vertex in vor.ridge_vertices: 
+            i = ridge_vertex[0]
+            j = ridge_vertex[1]
             
-            i = vor.ridge_vertices[idx][0]
-            j = vor.ridge_vertices[idx][1]
+            #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
             
             if i == -1 or j == -1:
                 continue

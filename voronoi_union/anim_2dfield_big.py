@@ -30,9 +30,9 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
     def construct(self):
         ##### Step 1: Defining the problem field
     
-        x_length = 30        # x coordinate of the cows field [m]
-        y_length = 20        # y coordinate of the cows field [m]
-        n_obst = 10          # number of obsticles (cows)
+        x_length = 60        # x coordinate of the cows field [m]
+        y_length = 100        # y coordinate of the cows field [m]
+        n_obst = 100          # number of obsticles (cows)
         
         obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
         obst_coord[:,0] *= x_length
@@ -151,11 +151,11 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
         lines_b = VGroup()
         lines_all = VGroup()
 
-        for ridge_point in vor.ridge_points: 
-            #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
+        for ridge_vertex in vor.ridge_vertices: 
+            i = ridge_vertex[0]
+            j = ridge_vertex[1]
             
-            i = ridge_point[0]
-            j = ridge_point[1]
+            #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
             
             if i == -1 or j == -1:
                 continue
@@ -213,7 +213,7 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
             uf_lines.add(line)
             
         for line in uf_lines[:-1]:
-            self.play(Create(line), run_time=1.0)  # adjust run_time as needed
+            self.play(Create(line), run_time=10.0)
         self.wait()
         
         uf_lines[-1].set_color(PURE_RED)
@@ -225,7 +225,7 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
             p1 = [vor.vertices[all_idx[node_idx], 0], vor.vertices[all_idx[node_idx], 1], 0]
             
             dot = Dot(point=p1, radius=0.2, color=YELLOW)
-            self.play(Indicate(dot))
+            self.play(Indicate(dot), runtime=10.0)
             
         self.wait()
         

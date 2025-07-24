@@ -151,11 +151,11 @@ class TwoDField_Vor_UF(MovingCameraScene):
         lines_b = VGroup()
         lines_all = VGroup()
 
-        for ridge_point in vor.ridge_points: 
-            #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
+        for ridge_vertex in vor.ridge_vertices: 
+            i = ridge_vertex[0]
+            j = ridge_vertex[1]
             
-            i = ridge_point[0]
-            j = ridge_point[1]
+            #assert i != -1, f"something went wrong, we have a out-of-bounds ridge vertex: {vor.ridge_vertices}"
             
             if i == -1 or j == -1:
                 continue
