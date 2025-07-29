@@ -68,6 +68,9 @@ class Graph_Formula(MovingCameraScene):
         # Plot second graph and second formula
         self.play(Create(graph2), Write(formula2))
         self.wait()
+        
+        self.play(FadeOut(graph2, formula2))
+        self.wait()
 
         # Final title and formulas (Cost summary) — further above
         title = Text("Cost Function of Rumo", font_size=36)
