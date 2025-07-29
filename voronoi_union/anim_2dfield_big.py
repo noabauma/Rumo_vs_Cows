@@ -213,7 +213,7 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
             uf_lines.add(line)
             
         for line in uf_lines[:-1]:
-            self.play(Create(line), run_time=10.0)
+            self.play(Create(line), run_time=0.25)
         self.wait()
         
         uf_lines[-1].set_color(PURE_RED)
@@ -225,7 +225,7 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
             p1 = [vor.vertices[all_idx[node_idx], 0], vor.vertices[all_idx[node_idx], 1], 0]
             
             dot = Dot(point=p1, radius=0.2, color=YELLOW)
-            self.play(Indicate(dot), runtime=10.0)
+            self.play(Indicate(dot), run_time=0.25)
             
         self.wait()
         
@@ -240,5 +240,5 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
         path_lines.set_z_index(2)
 
         # Animate the path drawing
-        self.play(Create(path_lines), run_time=3)
+        self.play(Create(path_lines), run_time=0.5)
         self.wait()

@@ -50,29 +50,46 @@ class Edge_node_ratio(MovingCameraScene):
         
         group = VGroup(dot, lines)
         
-        self.anim_u(group.copy())
-        self.anim_r(group.copy())
-    
-            
-    def anim_u(self, group: VGroup):
-        self.play(group.animate.shift(UP), run_time=1)
-        self.wait()
+        group1 = group.copy()
+        group2 = group.copy()
+        group3 = group.copy()
+        group4 = group.copy()
         
-        self.rec_counter += 1
-        if self.rec_counter < self.rec_max:
-            self.anim_u(group.copy())
-            self.anim_r(group.copy())
-            
-    def anim_r(self, group: VGroup):
-        self.play(group.animate.shift(RIGHT), run_time=1)
-        self.wait()
+        self.play(group1.animate.shift(UP), group2.animate.shift(DOWN), group3.animate.shift(LEFT), group4.animate.shift(RIGHT))
         
-        self.rec_counter += 1
-        if self.rec_counter < self.rec_max:
-            self.anim_u(group.copy())
-            self.anim_r(group.copy())
-            
-    rec_counter = 0
-    rec_max = 16
+        group1 = group1.copy()
+        group2 = group2.copy()
+        group3 = group3.copy()
+        group4 = group4.copy()
         
-    
+        self.play(group1.animate.shift(LEFT), group2.animate.shift(RIGHT), group3.animate.shift(DOWN), group4.animate.shift(UP))
+        
+        group1 = group1.copy()
+        group2 = group2.copy()
+        group3 = group3.copy()
+        group4 = group4.copy()
+        
+        self.play(group1.animate.shift(LEFT), group2.animate.shift(RIGHT), group3.animate.shift(DOWN), group4.animate.shift(UP))
+        
+        group1 = group1.copy()
+        group2 = group2.copy()
+        group3 = group3.copy()
+        group4 = group4.copy()
+        
+        self.play(group1.animate.shift(DOWN), group2.animate.shift(UP), group3.animate.shift(RIGHT), group4.animate.shift(LEFT))
+        
+        group1 = group1.copy()
+        group2 = group2.copy()
+        group3 = group3.copy()
+        group4 = group4.copy()
+        
+        self.play(group1.animate.shift(DOWN), group2.animate.shift(UP), group3.animate.shift(RIGHT), group4.animate.shift(LEFT))
+        
+        group1 = group1.copy()
+        group2 = group2.copy()
+        group3 = group3.copy()
+        group4 = group4.copy()
+        
+        self.play(group1.animate.shift(DOWN), group2.animate.shift(UP), group3.animate.shift(RIGHT), group4.animate.shift(LEFT))
+        
+        self.play(Indicate(group))        
