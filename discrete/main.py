@@ -170,11 +170,19 @@ def main():
     time_start = time.time()
     
     ##### Step 1: Let's build the problem field
-    x_length = 50        # x coordinate of the cows field [m]
-    y_length = 100        # y coordinate of the cows field [m]
-    n_obst = 100          # number of obsticles (cows)
-    
-    np.random.seed(42)   # seed for the random number generator
+    if len(sys.argv) > 1:
+        n_obst = int(sys.argv[1])
+        seed = int(sys.argv[2])
+        x_length = int((n_obst*100)**0.5)
+        y_length = x_length
+         
+        np.random.seed(seed)
+    else:
+        x_length = 50        # x coordinate of the cows field [m]
+        y_length = 100        # y coordinate of the cows field [m]
+        n_obst = 100          # number of obsticles (cows)
+        
+        np.random.seed(43)   # seed for the random number generator
         
     grid_spacing = 1        # spacing of the grid points [m]
     
@@ -185,6 +193,10 @@ def main():
 
     ##### Step 2: Computing the 2d heatmap of the cows in the field
     grid_points, n_total_points, n_grid_points_x = compute_heatmap(obst_coord, x_length, y_length, grid_spacing)
+    
+    density = n_obst/(grid_points.shape[0]*grid_points.shape[1])
+    # print("n_obst, seed, x_length, y_length, n_grid_points, density")
+    # print(n_obst, seed, x_length, y_length, grid_points.shape, density)
     
     ##### Step 3: Converting the heatmap into a weighted graph
     graph = compute_graph(grid_points, n_total_points, n_grid_points_x)
@@ -209,33 +221,36 @@ def main():
     path.append(start_coord)
     path = path[::-1]  # Reverse the path to get it from source to destination
     
-    print("total runtime: ", time.time() - time_start, "[s]")
+    print(time.time() - time_start)
+    # print("total runtime: ", time.time() - time_start, "[s]")
     
     ##### Step 5: Plot
     
-    # Plot the shortest path
-    x_coords = grid_points[path, 0]
-    y_coords = grid_points[path, 1]
-    plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
-    
-    # Plot the start and end points
-    #plt.plot(grid_points[start_coord, 0], grid_points[start_coord, 1], marker='x', linestyle='-', color='green', markersize=8)
-    #plt.plot(grid_points[end_coord, 0], grid_points[end_coord, 1], marker='x', linestyle='-', color='red', markersize=8)
+    plot = False
+    if plot:
+        # Plot the shortest path
+        x_coords = grid_points[path, 0]
+        y_coords = grid_points[path, 1]
+        plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
+        
+        # Plot the start and end points
+        #plt.plot(grid_points[start_coord, 0], grid_points[start_coord, 1], marker='x', linestyle='-', color='green', markersize=8)
+        #plt.plot(grid_points[end_coord, 0], grid_points[end_coord, 1], marker='x', linestyle='-', color='red', markersize=8)
 
-    # Plot the heatmap
-    weights = grid_points[:, 2].reshape((y_length+1, x_length+1))
-    plt.imshow(weights, origin='lower', extent=(0, x_length, 0, y_length), cmap='hot', interpolation='nearest')
-    plt.colorbar(label='Cost')
-    
-    margin = max(x_length, y_length)/20.0
-    plt.xlim(-margin, x_length + margin)
-    plt.ylim(-margin, y_length + margin)
-    
-    plt.title('Heatmap with Shortest Path')
-    plt.xlabel('X Axis')
-    plt.ylabel('Y Axis')
-    plt.savefig('heatmap.png')
-    plt.show()
+        # Plot the heatmap
+        weights = grid_points[:, 2].reshape((y_length+1, x_length+1))
+        plt.imshow(weights, origin='lower', extent=(0, x_length, 0, y_length), cmap='hot', interpolation='nearest')
+        plt.colorbar(label='Cost')
+        
+        margin = max(x_length, y_length)/20.0
+        plt.xlim(-margin, x_length + margin)
+        plt.ylim(-margin, y_length + margin)
+        
+        plt.title('Heatmap with Shortest Path')
+        plt.xlabel('X Axis')
+        plt.ylabel('Y Axis')
+        plt.savefig('heatmap.png')
+        plt.show()
     
     
      

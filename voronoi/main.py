@@ -1,3 +1,4 @@
+import sys
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,8 +12,6 @@ This code computes the problem of Rumo having to pass a field with n cows.
 We have to get from point A to point B with having as little contact to the cows as he start barking otherwise.
 I.e. we are searching for the path of least resistance.
 """
-
-np.random.seed(42)
 
 
 def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
@@ -143,10 +142,19 @@ def main():
     time_start = time.time()
     
     ##### Step 1: Defining the problem field
-    
-    x_length = 50        # x coordinate of the cows field [m]
-    y_length = 100        # y coordinate of the cows field [m]
-    n_obst = 3000          # number of obsticles (cows)
+    if len(sys.argv) > 1:
+        n_obst = int(sys.argv[1])
+        seed = int(sys.argv[2])
+        x_length = int((n_obst*100)**0.5)
+        y_length = x_length
+         
+        np.random.seed(seed)
+    else:
+        x_length = 50        # x coordinate of the cows field [m]
+        y_length = 100        # y coordinate of the cows field [m]
+        n_obst = 100          # number of obsticles (cows)
+        
+        np.random.seed(43)   # seed for the random number generator
     
     obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
     obst_coord[:,0] *= x_length
@@ -210,37 +218,40 @@ def main():
     
     # total runtime complexity
     # O[n*log(n) + n + n*k + n*log(n)]
-    print("total runtime: ", time.time() - time_start, "[s]")
+    print(time.time() - time_start)
+    # print("total runtime: ", time.time() - time_start, "[s]")
     
     ##### Step 5: Plot
     
-    # plot voronoi
-    #fig = voronoi_plot_2d(vor)
-    
-    # Plot the shortest path    
-    x_coords = vor.vertices[all_idx[path], 0]
-    y_coords = vor.vertices[all_idx[path], 1]
-    plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
-    
-    #colors = ['green' if (0.0 < t < 1.0) else 'red' for t in edges_w_weights[:,3]]
-    #plt.scatter(edges_w_weights[:,4], edges_w_weights[:,5], c=colors, s=50, edgecolors='black')
-    
-    plt.scatter(og_obst_coord[:,0], og_obst_coord[:,1], c='pink', s=50)
+    plot = False
+    if plot:
+        # plot voronoi
+        #fig = voronoi_plot_2d(vor)
+        
+        # Plot the shortest path    
+        x_coords = vor.vertices[all_idx[path], 0]
+        y_coords = vor.vertices[all_idx[path], 1]
+        plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
+        
+        #colors = ['green' if (0.0 < t < 1.0) else 'red' for t in edges_w_weights[:,3]]
+        #plt.scatter(edges_w_weights[:,4], edges_w_weights[:,5], c=colors, s=50, edgecolors='black')
+        
+        plt.scatter(og_obst_coord[:,0], og_obst_coord[:,1], c='pink', s=50)
 
-    # Draw the square bounding box
-    plt.plot([0, x_length, x_length, 0, 0],
-            [0, 0, y_length, y_length, 0],
-            'k--', lw=2)
-    
-    margin = max(x_length, y_length)/20.0
-    plt.xlim(-margin, x_length + margin)
-    plt.ylim(-margin, y_length + margin)
+        # Draw the square bounding box
+        plt.plot([0, x_length, x_length, 0, 0],
+                [0, 0, y_length, y_length, 0],
+                'k--', lw=2)
+        
+        margin = max(x_length, y_length)/20.0
+        plt.xlim(-margin, x_length + margin)
+        plt.ylim(-margin, y_length + margin)
 
-    plt.title('Shortest Path in a Voronoi Diagram of Cows')
-    plt.xlabel('X Axis')
-    plt.ylabel('Y Axis')
-    plt.savefig('heatmap2.png')
-    plt.show()
+        plt.title('Shortest Path in a Voronoi Diagram of Cows')
+        plt.xlabel('X Axis')
+        plt.ylabel('Y Axis')
+        plt.savefig('heatmap2.png')
+        plt.show()
     
 
 if __name__ == "__main__":

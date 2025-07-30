@@ -1,0 +1,13 @@
+N script avg_runtime
+10 discrete/main.py .10932
+10 voronoi/main.py .00644
+10 voronoi_union/main.py .00549
+50 discrete/main.py 1.37708
+50 voronoi/main.py .02310
+50 voronoi_union/main.py .00880
+100 discrete/main.py 5.21061
+100 voronoi/main.py .04605
+100 voronoi_union/main.py .01681
+200 discrete/main.py 20.47608
+200 voronoi/main.py .12431
+200 voronoi_union/main.py .03309

@@ -1,3 +1,4 @@
+import sys
 import time
 import numpy as np
 from collections import defaultdict, deque
@@ -11,8 +12,6 @@ This code computes the problem of Rumo having to pass a field with n cows.
 We have to get from point A to point B with having as little contact to the cows as he start barking otherwise.
 I.e. we are searching for the path of least resistance.
 """
-
-np.random.seed(42)
 
 # Turn on interactive mode
 # plt.ion()
@@ -222,7 +221,6 @@ def find_path(graph: defaultdict, n_nodes: int, least_visited: bool = False):
         graph (defaultdict): [description]
         n_nodes (int): [description]
     """
-    print(n_nodes)
     if n_nodes > 6000:
         # Non-recursive DFS from ChatGPT
         visited = set()
@@ -268,10 +266,19 @@ def main():
     time_start = time.time()
     
     ##### Step 1: Defining the problem field
-    
-    x_length = 50        # x coordinate of the cows field [m]
-    y_length = 100        # y coordinate of the cows field [m]
-    n_obst = 3000          # number of obsticles (cows)
+    if len(sys.argv) > 1:
+        n_obst = int(sys.argv[1])
+        seed = int(sys.argv[2])
+        x_length = int((n_obst*100)**0.5)
+        y_length = x_length
+         
+        np.random.seed(seed)
+    else:
+        x_length = 50        # x coordinate of the cows field [m]
+        y_length = 100        # y coordinate of the cows field [m]
+        n_obst = 100          # number of obsticles (cows)
+        
+        np.random.seed(43)   # seed for the random number generator
     
     obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
     obst_coord[:,0] *= x_length
@@ -341,24 +348,27 @@ def main():
     # total runtime complexity
     # 
     
-    print("total runtime: ", time.time() - time_start, "[s]")
+    print(time.time() - time_start)
+    # print("total runtime: ", time.time() - time_start, "[s]")
     
     ##### Step 6: Plot
     
-    # plot voronoi
-    #fig = voronoi_plot_2d(vor)
-    
-    # Plot the shortest path    
-    x_coords = vor.vertices[all_idx[path], 0]
-    y_coords = vor.vertices[all_idx[path], 1]
-    plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
-    
-    #plt.scatter(edges_w_weights[:,3], edges_w_weights[:,4], s=50, edgecolors='black')
+    plot = False
+    if plot:
+        # plot voronoi
+        #fig = voronoi_plot_2d(vor)
+        
+        # Plot the shortest path    
+        x_coords = vor.vertices[all_idx[path], 0]
+        y_coords = vor.vertices[all_idx[path], 1]
+        plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
+        
+        #plt.scatter(edges_w_weights[:,3], edges_w_weights[:,4], s=50, edgecolors='black')
 
-    plt.xlabel('X Axis')
-    plt.ylabel('Y Axis')
-    plt.savefig('heatmap2.png')
-    plt.show()
+        plt.xlabel('X Axis')
+        plt.ylabel('Y Axis')
+        plt.savefig('heatmap2.png')
+        plt.show()
     
 
 if __name__ == "__main__":

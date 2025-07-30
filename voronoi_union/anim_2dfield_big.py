@@ -167,7 +167,7 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
                 line = Line(
                     [a[0], a[1], 0],
                     [b[0], b[1], 0],
-                    stroke_width=4,
+                    stroke_width=8,
                     color=BLUE # interpolate_color(BLUE, RED, weight)
                 )
                 lines.add(line)
@@ -183,8 +183,8 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
             line = Line(
                 [a[0], a[1], 0],
                 [b[0], b[1], 0],
-                stroke_width=4,
-                color=BLUE # interpolate_color(BLUE, RED, weight)
+                stroke_width=8,
+                color=BLUE
             )
             lines_all.add(line)
 
@@ -206,8 +206,8 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
             line = Line(
                 p1,
                 p2,
-                stroke_width=4,
-                color=ORANGE # interpolate_color(BLUE, RED, weight)
+                stroke_width=12,
+                color=ORANGE
             )
             
             uf_lines.add(line)
@@ -234,7 +234,7 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
         for i, j in zip(path[:-1], path[1:]):
             p1 = [vor.vertices[all_idx[i], 0], vor.vertices[all_idx[i], 1], 0]
             p2 = [vor.vertices[all_idx[j], 0], vor.vertices[all_idx[j], 1], 0]
-            line = Line(p1, p2, color=PURE_GREEN, stroke_width=11)
+            line = Line(p1, p2, color=PURE_GREEN, stroke_width=15)
             path_lines.add(line)
         
         path_lines.set_z_index(2)
