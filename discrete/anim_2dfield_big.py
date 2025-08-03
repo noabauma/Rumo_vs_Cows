@@ -15,11 +15,11 @@ class Cross(VGroup):
 class TwoDField_Dis_Big(MovingCameraScene):        
     def construct(self):
         ##### Step 1: Let's build the problem field
-        x_length = 60        # x coordinate of the cows field [m]
-        y_length = 100        # y coordinate of the cows field [m]
+        x_length = 100        # x coordinate of the cows field [m]
+        y_length = 60        # y coordinate of the cows field [m]
         n_obst = 100          # number of obsticles (cows)
         
-        np.random.seed(42)   # seed for the random number generator
+        np.random.seed(38)   # seed for the random number generator
             
         grid_spacing = 1        # spacing of the grid points [m]
         
@@ -133,5 +133,6 @@ class TwoDField_Dis_Big(MovingCameraScene):
         path_lines.set_z_index(2)
 
         # Animate the path drawing
+        self.wait()
         self.play(Create(path_lines), run_time=3)
         self.wait()

@@ -25,14 +25,14 @@ def is_inside_rect(point, rect: Rectangle):
         y_min <= point[1] <= y_max
     )
 
-class TwoDField_Vor_Frozen(MovingCameraScene):        
+class TwoDField_Vor_Frozen2(MovingCameraScene):        
     def construct(self):
         ##### Step 1: Defining the problem field
         x_length = 30        # x coordinate of the cows field [m]
         y_length = 20        # y coordinate of the cows field [m]
         
         obst_coord = np.array([[1/2, 3/4], [1/2, 1/4], [9/10, 3/4], [9/10, 1/4]])
-        obst_coord = np.array([[1/2, 2/10], [1/2, 19/20], [1/10, 1/2], [9/10, 1/2]])
+        #obst_coord = np.array([[1/2, 2/10], [1/2, 19/20], [1/10, 1/2], [9/10, 1/2]])
         obst_coord[:,0] *= x_length
         obst_coord[:,1] *= y_length
         

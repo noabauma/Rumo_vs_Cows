@@ -3,8 +3,6 @@ import numpy as np
 
 from main import * # all the functions of discrete/main.py
 
-np.random.seed(42)   # seed for the random number generator
-
 class Cross(VGroup):
     def __init__(self, point=ORIGIN, size=0.2, color=PURE_RED, stroke_width=4, **kwargs):
         line1 = Line((UP + LEFT) * size, (DOWN + RIGHT) * size, color=color, stroke_width=stroke_width, **kwargs)
@@ -28,9 +26,11 @@ def is_inside_rect(point, rect: Rectangle):
 class TwoDField_Vor_Big(MovingCameraScene):        
     def construct(self):
         ##### Step 1: Defining the problem field
-        x_length = 60        # x coordinate of the cows field [m]
-        y_length = 100        # y coordinate of the cows field [m]
+        x_length = 100        # x coordinate of the cows field [m]
+        y_length = 60        # y coordinate of the cows field [m]
         n_obst = 100          # number of obsticles (cows)
+        
+        np.random.seed(38)   # seed for the random number generator
         
         obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
         obst_coord[:,0] *= x_length
