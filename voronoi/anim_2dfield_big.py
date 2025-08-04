@@ -26,11 +26,11 @@ def is_inside_rect(point, rect: Rectangle):
 class TwoDField_Vor_Big(MovingCameraScene):        
     def construct(self):
         ##### Step 1: Defining the problem field
-        x_length = 100        # x coordinate of the cows field [m]
-        y_length = 60        # y coordinate of the cows field [m]
+        x_length = 60        # x coordinate of the cows field [m]
+        y_length = 100        # y coordinate of the cows field [m]
         n_obst = 100          # number of obsticles (cows)
         
-        np.random.seed(38)   # seed for the random number generator
+        np.random.seed(42)   # seed for the random number generator
         
         obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
         obst_coord[:,0] *= x_length

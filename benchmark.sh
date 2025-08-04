@@ -4,36 +4,46 @@
 scripts=("discrete/main.py" "voronoi/main.py" "voronoi_union/main.py")
 
 # Values for N and seeds
-nodes=(10 50 100 200)
+nodes=(10 50 100 200 300 400 500 600 700)
 
 # Output file
 output_file="benchmark_results.txt"
-> "$output_file"  # Clear the file
+> "$output_file"  # Clear previous content
 
-# Header for the results file
-echo "N script avg_runtime" >> "$output_file"
+# Header
+echo "N script avg_runtime secondary_values" >> "$output_file"
 
 # Loop over N and each script
 for N in "${nodes[@]}"; do
   for script in "${scripts[@]}"; do
     total_time=0
     count=0
+    secondary_values=()
 
-    # Run for all seeds
     for seed in "${nodes[@]}"; do
-      # Capture the runtime (assumes script prints runtime in seconds)
-      runtime=$(python3 "$script" "$N" "$seed")
-
+      # Run the script and capture both runtime and secondary metric
+      output=$(python "$script" --nodes "$N" --seed "$seed")
+      
+      # Parse two values from output
+      runtime=$(echo "$output" | awk '{print $1}')
+      secondary=$(echo "$output" | awk '{print $2}')
+      
       # Accumulate runtime
       total_time=$(echo "$total_time + $runtime" | bc)
       ((count++))
+
+      # Save secondary value
+      secondary_values=("$secondary")
     done
 
-    # Compute average time for this N and script
+    # Compute average runtime
     avg_time=$(echo "scale=5; $total_time / $count" | bc)
 
-    # Save results (N, script name, avg runtime)
-    echo "$N $script $avg_time" >> "$output_file"
+    # Join all secondary values into space-separated string
+    secondary_str=$(IFS=','; echo "${secondary_values[*]}")
+
+    # Write line to output
+    echo "$N $script $avg_time $secondary_str" >> "$output_file"
   done
 done
 

@@ -224,8 +224,8 @@ class TwoDField_Vor_UF(MovingCameraScene):
         for node_idx in visited_nodes:
             p1 = [vor.vertices[all_idx[node_idx], 0], vor.vertices[all_idx[node_idx], 1], 0]
             
-            dot = Dot(point=p1, radius=0.2, color=YELLOW)
-            self.play(Indicate(dot))
+            dot = Dot(point=p1, radius=0.2, color=PURE_GREEN)
+            self.play(Indicate(dot, scale_factor=5.0, color=PURE_GREEN))
             
         self.wait()
         
