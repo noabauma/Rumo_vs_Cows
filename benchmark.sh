@@ -4,7 +4,7 @@
 scripts=("discrete/main.py" "voronoi/main.py" "voronoi_union/main.py")
 
 # Values for N and seeds
-nodes=(10 50 100) # 200 300 400 500 600 700)
+nodes=(10 50 100 200 300 400 500 600 700)
 
 # Output file
 output_file="benchmark_results.txt"
