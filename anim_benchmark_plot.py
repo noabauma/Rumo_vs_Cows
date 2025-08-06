@@ -58,27 +58,38 @@ class Benchmark_Plot(MovingCameraScene):
         for script, color in zip(scripts, colors):
             data = df[df["script"] == script]
             N_vals = data["N"]
-            runtime_vals = np.log10(data["avg_runtime"])  # transform y-values to log10
+            runtime_vals = data["avg_runtime"]
 
-            # Create points for plot
+            # Convert to log10 for plotting
+            log_runtime_vals = np.log10(runtime_vals)
+
+            # Create points
             points = [
-                axes.c2p(N, np.log10(runtime))
-                for N, runtime in zip(N_vals, data["avg_runtime"])
+                axes.c2p(N, log_runtime)
+                for N, log_runtime in zip(N_vals, log_runtime_vals)
             ]
-            graph = VMobject(color=color).set_points_smoothly(points)
+
+            # Line plot
+            graph = VMobject(color=color).set_points_as_corners(points)  # straight lines
             graphs.append(graph)
 
+            # Create and animate dots
+            dot_group = VGroup(*[Dot(point=p, color=color, radius=0.05) for p in points])
+
+            self.play(Create(graph), FadeIn(dot_group), run_time=1)
+            
             # Add legend label
             label = Text(script.split("/")[0], font_size=24).set_color(color)
             legends.add(label)
+
 
         # Arrange legends
         legends.arrange(DOWN, aligned_edge=LEFT)
         legends.to_corner(UR)
 
-        # Animate drawing of graphs
-        for graph in graphs:
-            self.play(Create(graph), run_time=1)
+        # # Animate drawing of graphs
+        # for graph in graphs:
+        #     self.play(Create(graph), run_time=1)
 
         self.play(FadeIn(legends))
         self.wait()
