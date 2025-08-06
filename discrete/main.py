@@ -221,7 +221,7 @@ def main():
     path.append(start_coord)
     path = path[::-1]  # Reverse the path to get it from source to destination
     
-    print(time.time() - time_start)
+    print(time.time() - time_start, n_total_points)
     # print("total runtime: ", time.time() - time_start, "[s]")
     
     ##### Step 5: Plot

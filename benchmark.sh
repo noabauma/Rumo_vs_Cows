@@ -4,7 +4,7 @@
 scripts=("discrete/main.py" "voronoi/main.py" "voronoi_union/main.py")
 
 # Values for N and seeds
-nodes=(10 50 100 200 300 400 500 600 700)
+nodes=(10 50 100) # 200 300 400 500 600 700)
 
 # Output file
 output_file="benchmark_results.txt"
@@ -20,9 +20,11 @@ for N in "${nodes[@]}"; do
     count=0
     secondary_values=()
 
+    echo "Running: $N with $script"
+
     for seed in "${nodes[@]}"; do
       # Run the script and capture both runtime and secondary metric
-      output=$(python "$script" --nodes "$N" --seed "$seed")
+      output=$(python "$script" "$N" "$seed")
       
       # Parse two values from output
       runtime=$(echo "$output" | awk '{print $1}')

@@ -348,7 +348,7 @@ def main():
     # total runtime complexity
     # 
     
-    print(time.time() - time_start)
+    print(time.time() - time_start, len(all_idx))
     # print("total runtime: ", time.time() - time_start, "[s]")
     
     ##### Step 6: Plot

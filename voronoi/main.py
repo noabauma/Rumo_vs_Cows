@@ -85,7 +85,7 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     # First, make a mapping of the vor.vertices to arange as CSR starts from 0, n_points -1.
     all_idx = np.unique(edges_w_weights[:,0:2]).astype(int)
     
-    # We define the end and starting point by shuffeling the all_idx! (amazing)
+    # We define the end and starting point by swapping the first and last position in all_idx! (amazing)
     # The first index is the starting point and the last index the end point
     # The starting point will start on a point on the lower boundary
     # and the end point on a point on the upper boundary
@@ -218,7 +218,7 @@ def main():
     
     # total runtime complexity
     # O[n*log(n) + n + n*k + n*log(n)]
-    print(time.time() - time_start)
+    print(time.time() - time_start, len(all_idx))
     # print("total runtime: ", time.time() - time_start, "[s]")
     
     ##### Step 5: Plot
