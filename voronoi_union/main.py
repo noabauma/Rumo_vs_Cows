@@ -177,14 +177,6 @@ def union_find(vor: Voronoi, edges_w_weights: np.array, all_idx: np.array):
         i = int(edges_w_weights[edge_idx, 0])
         j = int(edges_w_weights[edge_idx, 1])
         
-        # x_coords = [vor.vertices[i, 0], vor.vertices[j, 0]]
-        # y_coords = [vor.vertices[i, 1], vor.vertices[j, 1]]
-        # ax.plot(x_coords, y_coords, marker='o', linestyle='-', color='red', markersize=8)
-        # plt.draw()     # Redraw the current figure
-        # plt.pause(0.1) # Pause to allow the plot to update (simulate "step-by-step")
-        # time.sleep(0.05)
-        # fig.savefig(f"frame_{edge_idx:03d}.png")
-        
         i = idx_map[i]
         j = idx_map[j]
         

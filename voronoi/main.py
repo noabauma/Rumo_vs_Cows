@@ -115,15 +115,16 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     all_idx[0], all_idx[start_idx] = all_idx[start_idx], all_idx[0]
     all_idx[-1], all_idx[end_idx] = all_idx[end_idx], all_idx[-1]
     
+    # We create a mapping between indeces {0, n-1} and the real all_idx for O(1) lookup time
+    idx_map = {val: idx for idx, val in enumerate(all_idx)}
+
     n_nodes = len(all_idx)
     graph = np.zeros((n_nodes, n_nodes))
-    for middle_point in edges_w_weights:
-        # O(n) cost of searching this idx in all_idx
-        i = np.where(all_idx == middle_point[0])[0][0]
-        j = np.where(all_idx == middle_point[1])[0][0]
-        
-        graph[i,j] = middle_point[2]
-    
+    for edge in edges_w_weights:
+        i = idx_map[edge[0]]
+        j = idx_map[edge[1]]
+        graph[i, j] = edge[2]
+
     return csr_matrix(graph), all_idx
             
 
