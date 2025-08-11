@@ -104,12 +104,12 @@ class Graph_Formula(MovingCameraScene):
         # V: 0, 0, 0, 1, 2, 3, 4, 5
         # E: 0, 0, 1, 3, 5, 7
         
-        title = Text("Algorithm Complexity Comparison", font_size=40).move_to(UP*20)
+        title = Text("Algorithm Complexity Comparison", font_size=40).move_to(UP*22)
         
         self.play(FadeIn(title))
         
         # --- Discrete ---
-        discrete_label = Text("Discrete:", font_size=20).next_to(title, 1*DOWN, buff=0.3)
+        discrete_label = Text("Regular Grid:", font_size=20).next_to(title, 1*DOWN, buff=0.3)
         discrete_expr = MathTex(
             #r"\underbrace{\mathcal{O}(c + n)}_{\text{build field}} + "
             r"\underbrace{\mathcal{O}(cn)}_{\text{compute heatmap}} + "
@@ -137,7 +137,7 @@ class Graph_Formula(MovingCameraScene):
         voronoi_group.next_to(voronoi_label, DOWN, buff=0.3)  # <- FIXED
 
         # --- Voronoi Union ---
-        union_label = Text("Voronoi Union Find:", font_size=20).next_to(voronoi_label, 1.5*DOWN, buff=1.3)  # align by label
+        union_label = Text("Voronoi + Union Find:", font_size=20).next_to(voronoi_label, 1.5*DOWN, buff=1.3)  # align by label
         union_expr = MathTex(
             #r"\underbrace{\mathcal{O}(c)}_{\text{build field}} + "
             r"\underbrace{\mathcal{O}(c \log (kn))}_{\text{compute voronoi}} + "
