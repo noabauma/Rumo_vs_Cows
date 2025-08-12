@@ -104,7 +104,7 @@ class Graph_Formula(MovingCameraScene):
         # V: 0, 0, 0, 1, 2, 3, 4, 5
         # E: 0, 0, 1, 3, 5, 7
         
-        title = Text("Algorithm Complexity Comparison", font_size=40).move_to(UP*22)
+        title = Text("Algorithm Complexity Comparison", font_size=40).move_to(UP*30)
         
         self.play(FadeIn(title))
         
@@ -112,8 +112,8 @@ class Graph_Formula(MovingCameraScene):
         discrete_label = Text("Regular Grid:", font_size=20).next_to(title, 1*DOWN, buff=0.3)
         discrete_expr = MathTex(
             #r"\underbrace{\mathcal{O}(c + n)}_{\text{build field}} + "
-            r"\underbrace{\mathcal{O}(cn)}_{\text{compute heatmap}} + "
-            r"\underbrace{\mathcal{O}(kn)}_{\text{compute graph}} + "
+            r"\underbrace{\mathcal{O}(cn)}_{\text{compute node weights}} + "
+            r"\underbrace{\mathcal{O}(kn)}_{\text{compute edge weights}} + "
             r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} \overset{c<<n,k=4}{=}"
         )
         discrete_total = MathTex(
