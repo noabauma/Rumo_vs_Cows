@@ -91,7 +91,7 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
         ##### Step 6: manim the shit out of it!
         
         # Create border rectangle instantly
-        rect = Rectangle(width=x_length, height=y_length).move_to(x_length/2 * RIGHT + y_length/2 * UP)
+        rect = Rectangle(width=x_length, height=y_length, stroke_width=2).move_to(x_length/2 * RIGHT + y_length/2 * UP)
         self.add(rect)  # Show immediately
 
         # Create a domain subrectangle (for cost display later)
@@ -209,7 +209,7 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
                 p1,
                 p2,
                 stroke_width=12,
-                color=ORANGE
+                color=BLUE
             )
             
             uf_lines.add(line)

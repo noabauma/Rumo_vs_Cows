@@ -114,7 +114,7 @@ class Graph_Formula(MovingCameraScene):
             #r"\underbrace{\mathcal{O}(c + n)}_{\text{build field}} + "
             r"\underbrace{\mathcal{O}(cn)}_{\text{compute node weights}} + "
             r"\underbrace{\mathcal{O}(kn)}_{\text{compute edge weights}} + "
-            r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} \overset{c\approx\frac{n}{100},k\lesssim4}{=}"
+            r"\underbrace{\mathcal{O}((kn + n) \log n)}_{\text{shortest path}} \overset{c\approx\frac{n}{100},k\leq4}{=}"
         )
         discrete_total = MathTex(
             r"\underbrace{\mathcal{O}(n^2)}_{\text{Total}}"
@@ -144,7 +144,7 @@ class Graph_Formula(MovingCameraScene):
             r"\underbrace{\mathcal{O}(kn)}_{\text{edge weights}} + "
             r"\underbrace{\mathcal{O}(kn \log (kn))}_{\text{sort edges}} + "
             r"\underbrace{\mathcal{O}(n \alpha(n))}_{\text{union find}} + "
-            r"\underbrace{\mathcal{O}(kn + n)}_{\text{DFS}} \overset{c\approx\frac{n}{2},k\approx3}{=}"
+            r"\underbrace{\mathcal{O}(kn + n)}_{\text{DFS}} \overset{c\approx\frac{n}{2},k\approx3,\alpha(n)\gtrsim3}{=}"
         )
         union_total = MathTex(
             r"\underbrace{\mathcal{O}(n \log n)}_{\text{Total}}"
