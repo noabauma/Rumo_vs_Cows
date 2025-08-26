@@ -19,30 +19,32 @@ I.e. we are searching for the path of least resistance.
 
 # Create a figure and axis once
 fig, ax = plt.subplots()
-
-
+    
 class UnionFind:
     def __init__(self, size):
         self.parent = list(range(size))
+        self.rank = [1] * size  # track tree sizes
 
     def find(self, i):
-        # If i itself is root or representative
-        if self.parent[i] == i:
-            return i
-          
-        # Else recursively find the representative 
-        # of the parent
-        return self.find(self.parent[i])
+        if self.parent[i] != i:
+            # Path compression: make parent point directly to root
+            self.parent[i] = self.find(self.parent[i])
+        return self.parent[i]
 
     def union(self, i, j):
         ir, jr = self.find(i), self.find(j)
         if ir == jr:
             return False
         
-        self.parent[ir] = jr
+        # Union by rank/size
+        if self.rank[ir] < self.rank[jr]:
+            self.parent[ir] = jr
+            self.rank[jr] += self.rank[ir]
+        else:
+            self.parent[jr] = ir
+            self.rank[ir] += self.rank[jr]
 
         return True
-
 
 def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     """Cost function to determine the cost of crossing this edge
@@ -355,7 +357,7 @@ def main():
         y_coords = vor.vertices[all_idx[path], 1]
         plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)
         
-        #plt.scatter(edges_w_weights[:,3], edges_w_weights[:,4], s=50, edgecolors='black')
+        # plt.scatter(edges_w_weights[:,3], edges_w_weights[:,4], s=50, edgecolors='black')
 
         plt.xlabel('X Axis')
         plt.ylabel('Y Axis')
