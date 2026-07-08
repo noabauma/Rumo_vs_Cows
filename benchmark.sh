@@ -35,7 +35,7 @@ for N in "${nodes[@]}"; do
       ((count++))
 
       # Save secondary value
-      secondary_values=("$secondary")
+      secondary_values+=("$secondary")
     done
 
     # Compute average runtime

@@ -12,7 +12,7 @@ I made a video about it for the Summer of Math Exposition (#SoME4), walking thro
 
 ### 1. `discrete` — brute force on a grid
 
-Lay a fine grid over the field and compute a danger heatmap: the closer a grid point is to a cow, the more it costs to step on it. Connect every node to its 8 neighbours, turn the node costs into edge weights and let Dijkstra find the cheapest path. Very accurate — Rumo can walk around each cow at exactly the right distance — but the graph grows with the *area* of the field rather than the number of cows, so it gets slow quickly.
+Lay a fine grid over the field and compute a danger heatmap: the closer a grid point is to a cow, the more it costs to step on it. Connect every node to its 8 neighbours, turn the node costs into edge weights and let Dijkstra find the cheapest path. Very accurate — Rumo can walk around each cow at exactly the right distance — but the graph grows with the *area* of the field rather than the number of cows: at the same herd density it needs about 50× more nodes than the Voronoi variants.
 
 ### 2. `voronoi` — let geometry do the work
 
@@ -32,12 +32,19 @@ Average runtime over 9 seeds. The field grows with the herd, keeping the density
 
 | # cows | `discrete` | `voronoi` | `voronoi_union` |
 |-------:|-----------:|----------:|----------------:|
-| 10     | 0.14 s     | 0.009 s   | 0.006 s         |
-| 50     | 1.6 s      | 0.026 s   | 0.013 s         |
-| 100    | 5.3 s      | 0.049 s   | 0.016 s         |
-| 200    | 20 s       | 0.097 s   | 0.031 s         |
-| 300    | 49 s       | 0.16 s    | 0.050 s         |
-| 400    | 93 s       | 0.24 s    | 0.079 s         |
+| 10     | 0.002 s    | 0.006 s   | 0.002 s         |
+| 50     | 0.006 s    | 0.031 s   | 0.006 s         |
+| 100    | 0.010 s    | 0.039 s   | 0.010 s         |
+| 200    | 0.020 s    | 0.075 s   | 0.021 s         |
+| 400    | 0.043 s    | 0.148 s   | 0.051 s         |
+| 700    | 0.087 s    | 0.417 s   | 0.076 s         |
+
+> **Note:** the video shows the benchmarks of the original implementation, where `discrete`
+> built a dense adjacency matrix and computed the heatmap in pure Python loops — taking 93 s
+> (and 13 GB of RAM) at 400 cows. The code has since been vectorized and switched to sparse
+> graphs, which makes all three approaches fast. `discrete` still pushes around ~50× more
+> graph nodes than the Voronoi variants (70 225 vs. 1 402 at 700 cows), while `voronoi` now
+> mostly pays for numerically integrating the danger along every ridge.
 
 Reproduce with `./benchmark.sh` (results land in `benchmark_results.txt`).
 

@@ -17,7 +17,7 @@ class TwoDField_Dis_Big(MovingCameraScene):
         ##### Step 1: Let's build the problem field
         x_length = 60        # x coordinate of the cows field [m]
         y_length = 100        # y coordinate of the cows field [m]
-        n_obst = 100          # number of obsticles (cows)
+        n_obst = 100          # number of obstacles (cows)
         
         np.random.seed(42)   # seed for the random number generator
             
@@ -38,8 +38,6 @@ class TwoDField_Dis_Big(MovingCameraScene):
         start_coord = int(np.random.random_sample()*x_length + 0.5)  # 0
         end_coord = grid_points.shape[0] - int(x_length/grid_spacing + 1) + int(np.random.random_sample()*x_length + 0.5)   # -1
         
-        # Swap the end point with the current last one
-        swap_nodes(graph, end_coord, -1)
         
         ##### Step 4: Compute the shortest path
         dist_matrix, predecessors = shortest_path(csgraph=graph, method='auto', directed=False, indices=start_coord, return_predecessors=True)
