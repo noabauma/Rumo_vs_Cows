@@ -32,7 +32,7 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
     
         x_length = 60        # x coordinate of the cows field [m]
         y_length = 100        # y coordinate of the cows field [m]
-        n_obst = 100          # number of obsticles (cows)
+        n_obst = 100          # number of obstacles (cows)
         
         np.random.seed(42)   # seed for the random number generator
         
@@ -40,7 +40,7 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
         obst_coord[:,0] *= x_length
         obst_coord[:,1] *= y_length
         
-        # Mirroring the cow field as we also need the voronoi edge on the on the boundaries
+        # Mirroring the cow field as we also need the voronoi edge on the boundaries
         # top
         top = np.array((obst_coord[:,0],2*y_length-obst_coord[:,1])).T
         
@@ -82,7 +82,7 @@ class TwoDField_Vor_UF_Big(MovingCameraScene):
         edges_w_weights, all_idx = compute_graph(vor, obst_coord, n_obst, x_length, y_length, start_coord, end_coord)
     
         ##### Step 4: Union-Find a connection from start to end
-        graph, final_edge_idx = union_find(vor, edges_w_weights, all_idx)
+        graph, final_edge_idx = union_find(edges_w_weights, all_idx)
         
         ##### Step 5: Find a path (doesn't matter how long as all of them are maximal distance to any cow)
         path, visited_nodes = find_path(graph, len(all_idx))

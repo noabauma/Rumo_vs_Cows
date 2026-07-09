@@ -28,7 +28,7 @@ class TwoDField_Vor_Big(MovingCameraScene):
         ##### Step 1: Defining the problem field
         x_length = 60        # x coordinate of the cows field [m]
         y_length = 100        # y coordinate of the cows field [m]
-        n_obst = 100          # number of obsticles (cows)
+        n_obst = 100          # number of obstacles (cows)
         
         np.random.seed(42)   # seed for the random number generator
         
@@ -36,7 +36,7 @@ class TwoDField_Vor_Big(MovingCameraScene):
         obst_coord[:,0] *= x_length
         obst_coord[:,1] *= y_length
         
-        # Mirroring the cow field as we also need the voronoi edge on the on the boundaries
+        # Mirroring the cow field as we also need the voronoi edge on the boundaries
         # top
         top = np.array((obst_coord[:,0],2*y_length-obst_coord[:,1])).T
         

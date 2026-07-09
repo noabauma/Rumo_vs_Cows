@@ -2,26 +2,26 @@ import sys
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial import Voronoi, voronoi_plot_2d
+from scipy.spatial import Voronoi
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import shortest_path
 from scipy.integrate import simpson
 
 """
 This code computes the problem of Rumo having to pass a field with n cows.
-We have to get from point A to point B with having as little contact to the cows as he start barking otherwise.
+We have to get from point A to point B with as little contact with the cows as possible, as he starts barking otherwise.
 I.e. we are searching for the path of least resistance.
 """
 
 
-def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
+def cost_function(a: np.ndarray, b: np.ndarray, c1: np.ndarray, c2: np.ndarray):
     """Cost function to determine the cost of crossing this edge
 
     Args:
-        a (np.array): Starting coordinates in 2d
-        b (np.array): End coordinate in 2d
-        c1 (np.array): cow 1 coordinate in 2d
-        c2 (np.array): cow 2 coordinate in 2d
+        a (np.ndarray): Starting coordinates in 2d
+        b (np.ndarray): End coordinate in 2d
+        c1 (np.ndarray): cow 1 coordinate in 2d
+        c2 (np.ndarray): cow 2 coordinate in 2d
 
     Returns:
         cost (float): The cost of crossing this edge
@@ -32,7 +32,9 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     ts = np.linspace(0, 1, n)
     points = a[None, :] + ts[:, None] * (b - a)[None, :]  # shape (n, 2)
 
-    # Compute cost at each sampled point (adjust your cost logic as needed)
+    # Compute cost at each sampled point.
+    # Every point on a voronoi ridge is equidistant from its two generating cows,
+    # so the distance to c1 is already the distance to the nearest cow (c2 would give the same).
     crit_dist = 10
     costs = np.maximum(1 - np.linalg.norm(points - c1, axis=1) / crit_dist, 0.1)
 
@@ -42,26 +44,31 @@ def cost_function(a: np.array, b: np.array, c1: np.array, c2: np.array):
     
     return cost
     
-def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: float, y_length: float, start_coord: float, end_coord: float):
+def compute_graph(vor: Voronoi, obst_coord: np.ndarray, n_obst: int, x_length: float, y_length: float, start_coord: float, end_coord: float):
     """Computing the weighted graph from the voronoi diagram
 
     Args:
-        vor (Voronoi): [description]
-        obst_coord (np.array): [description]
-        n_obst (int): [description]
-        x_length (float): [description]
-        y_length (float): [description]
-        start_coord (float): [description]
-        end_coord (float): [description]
+        vor (Voronoi): The voronoi diagram of the (mirrored) cow field
+        obst_coord (np.ndarray): The 2d coordinates of all the cows (incl. the mirrored ones)
+        n_obst (int): The number of original (unmirrored) cows
+        x_length (float): The x length of the field [m]
+        y_length (float): The y length of the field [m]
+        start_coord (float): The x coordinate of the start point on the lower boundary
+        end_coord (float): The x coordinate of the end point on the upper boundary
+
+    Returns:
+        csr_matrix: The weighted graph
+        np.ndarray: mapping from graph node indices to voronoi vertex indices
+                    (the start node comes first, the end node last)
     """
-    
+
     # We start with computing all the middle points of the ridges (also add weight and other important stuff)
-    # one middle_point consists of: [start_idx, end_idx, cost, t, x_coord, y_coord]
+    # one middle_point consists of: [start_idx, end_idx, cost, x_coord, y_coord]
     # start_idx: starting ridge_point idx
     # end_idx: ending ridge_point idx
     # cost: the cost of crossing this edge
-    # x_coord: of the middle_point (debugging purpose)
-    # y_coord: of the middle_point (debugging purpose)
+    # x_coord: of the middle point between the two cows (debugging purpose)
+    # y_coord: of the middle point between the two cows (debugging purpose)
     edges_w_weights = []
     for i, ridge_point in enumerate(vor.ridge_points):        
         # go through all the ridge_points inside and on the rectangle field
@@ -79,19 +86,19 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
             
             
     edges_w_weights = np.array(edges_w_weights)
-    
-    # Next step: store everything into a weightes CSR graph file
-    
+
+    # Next step: store everything into a weighted CSR graph
+
     # First, make a mapping of the vor.vertices to arange as CSR starts from 0, n_points -1.
     all_idx = np.unique(edges_w_weights[:,0:2]).astype(int)
-    
+
     # We define the end and starting point by swapping the first and last position in all_idx! (amazing)
     # The first index is the starting point and the last index the end point
     # The starting point will start on a point on the lower boundary
     # and the end point on a point on the upper boundary
     # We choose the start/endpoints which are the closest to the ridge point on the respective boundaries
-    closest_to_start = (-1, x_length)
-    closest_to_end = (-1, x_length)
+    closest_to_start = (-1, np.inf)
+    closest_to_end = (-1, np.inf)
     for idx in all_idx:
         vor_vertex = vor.vertices[idx]
         if abs(vor_vertex[1]) < 1e-6:
@@ -110,22 +117,27 @@ def compute_graph(vor: Voronoi, obst_coord: np.array, n_obst: int, x_length: flo
     assert closest_to_end[0] != -1, "didn't find a closest point on the upper boundary"   
     
     start_idx = np.where(all_idx == closest_to_start[0])[0][0]
-    end_idx = np.where(all_idx == closest_to_end[0])[0][0]  
-                
+    end_idx = np.where(all_idx == closest_to_end[0])[0][0]
+
     all_idx[0], all_idx[start_idx] = all_idx[start_idx], all_idx[0]
+
+    # the first swap may have moved the end vertex away from position 0
+    if end_idx == 0:
+        end_idx = start_idx
+
     all_idx[-1], all_idx[end_idx] = all_idx[end_idx], all_idx[-1]
-    
-    # We create a mapping between indeces {0, n-1} and the real all_idx for O(1) lookup time
+
+    # We create a mapping between indices {0, n-1} and the real all_idx for O(1) lookup time
     idx_map = {val: idx for idx, val in enumerate(all_idx)}
 
     n_nodes = len(all_idx)
-    graph = np.zeros((n_nodes, n_nodes))
-    for edge in edges_w_weights:
-        i = idx_map[edge[0]]
-        j = idx_map[edge[1]]
-        graph[i, j] = edge[2]
 
-    return csr_matrix(graph), all_idx
+    # build the graph directly in sparse (COO) format instead of filling a dense n_nodes x n_nodes matrix
+    rows = [idx_map[int(edge[0])] for edge in edges_w_weights]
+    cols = [idx_map[int(edge[1])] for edge in edges_w_weights]
+    graph = csr_matrix((edges_w_weights[:, 2], (rows, cols)), shape=(n_nodes, n_nodes))
+
+    return graph, all_idx
             
 
 def main():
@@ -151,17 +163,17 @@ def main():
          
         np.random.seed(seed)
     else:
-        x_length = 50        # x coordinate of the cows field [m]
-        y_length = 100        # y coordinate of the cows field [m]
-        n_obst = 100          # number of obsticles (cows)
-        
+        x_length = 50        # x length of the cows field [m]
+        y_length = 100        # y length of the cows field [m]
+        n_obst = 100          # number of obstacles (cows)
+
         np.random.seed(43)   # seed for the random number generator
-    
+
     obst_coord = np.random.rand(n_obst, 2) # 2d coordinates of the cows
     obst_coord[:,0] *= x_length
     obst_coord[:,1] *= y_length
-    
-    # Mirroring the cow field as we also need the voronoi edge on the on the boundaries
+
+    # Mirroring the cow field as we also need the voronoi edges on the boundaries
     # top
     top = np.array((obst_coord[:,0],2*y_length-obst_coord[:,1])).T
     
@@ -226,10 +238,7 @@ def main():
     
     plot = False
     if plot:
-        # plot voronoi
-        #fig = voronoi_plot_2d(vor)
-        
-        # Plot the shortest path    
+        # Plot the shortest path
         x_coords = vor.vertices[all_idx[path], 0]
         y_coords = vor.vertices[all_idx[path], 1]
         plt.plot(x_coords, y_coords, marker='o', linestyle='-', color='blue', markersize=8)

@@ -38,7 +38,7 @@ class TwoDField_Vor_Frozen2(MovingCameraScene):
         
         n_obst = obst_coord.shape[0]
         
-        # Mirroring the cow field as we also need the voronoi edge on the on the boundaries
+        # Mirroring the cow field as we also need the voronoi edge on the boundaries
         # top
         top = np.array((obst_coord[:,0],2*y_length-obst_coord[:,1])).T
         
